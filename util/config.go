@@ -3,6 +3,7 @@ package util
 import (
 	"fmt"
 	"os"
+	"regexp"
 	"strconv"
 
 	"github.com/lpernett/godotenv"
@@ -15,11 +16,16 @@ var Config struct {
 	}
 
 	Server struct {
+		Host string
 		Port int
 	}
 
 	General struct {
 		UpdateCourses bool
+	}
+
+	Mapbox struct {
+		AccessToken string
 	}
 }
 
@@ -54,8 +60,10 @@ func LoadEnvFile() {
 				file.WriteString("DATABASE_FILE_NAME=\n")
 				file.WriteString("DATABASE_QUEUE_SIZE=\n")
 				file.WriteString("DATABASE_PASSWORD_SALT=\n")
+				file.WriteString("SERVER_HOST=\n")
 				file.WriteString("SERVER_PORT=\n")
 				file.WriteString("GENERAL_UPDATE_COURSES=\n")
+				file.WriteString("MAPBOX_ACCESS_TOKEN=\n")
 
 				file.Close()
 
@@ -102,6 +110,20 @@ func LoadEnvFile() {
 		Config.Database.PasswordSalt = tmp.(string)
 	}
 
+	if tmp = os.Getenv("SERVER_HOST"); tmp == "" {
+		Log.Error("SERVER_HOST not set (string)")
+		os.Exit(1)
+	} else {
+		Config.Server.Host = tmp.(string)
+
+		// Validate it's an IP octet
+		regex, _ := regexp.Compile(`^(\d{1,3}\.){3}\d{1,3}$`)
+		if !regex.MatchString(Config.Server.Host) {
+			Log.Error("SERVER_HOST not a valid IP address")
+			os.Exit(1)
+		}
+	}
+
 	if tmp = os.Getenv("SERVER_PORT"); tmp == "" {
 		Log.Error("SERVER_PORT not set (int)")
 		os.Exit(1)
@@ -124,6 +146,13 @@ func LoadEnvFile() {
 		} else {
 			Config.General.UpdateCourses = b
 		}
+	}
+
+	if tmp = os.Getenv("MAPBOX_ACCESS_TOKEN"); tmp == "" {
+		Log.Error("MAPBOX_ACCESS_TOKEN not set (string)")
+		os.Exit(1)
+	} else {
+		Config.Mapbox.AccessToken = tmp.(string)
 	}
 
 	Log.Status("Loaded environment variables")

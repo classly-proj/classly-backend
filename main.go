@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -562,11 +563,66 @@ func main() {
 		}
 	})
 
+	// Mapbox
+	http.HandleFunc("/mapbox/directions", func(w http.ResponseWriter, r *http.Request) {
+		// `https://api.mapbox.com/directions/v5/mapbox/driving/${start[0]}%2C${start[1]}%3B${end[0]}%2C${end[1]}?alternatives=true&geometries=geojson&language=en&overview=full&steps=true&access_token=pk.eyJ1IjoiZHNjYXJiMjEiLCJhIjoiY2x0cnR1Y254MGkxdzJqbnZ2bHowcHN1MiJ9.TSvhTRQ2X-G0M-mzagneOw`;
+
+		withCors(w, r)
+
+		if !withAuth(w, r) {
+			return
+		}
+
+		if r.Method != "POST" {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+
+		if r.Header.Get("Content-Type") != "text/plain" {
+			w.WriteHeader(http.StatusUnsupportedMediaType)
+			return
+		}
+
+		body := make([]byte, r.ContentLength)
+		r.Body.Read(body)
+
+		obj := struct {
+			StartX float64 `json:"startX"`
+			StartY float64 `json:"startY"`
+			EndX   float64 `json:"endX"`
+			EndY   float64 `json:"endY"`
+		}{}
+
+		err := json.Unmarshal(body, &obj)
+
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		res, err := http.Get(fmt.Sprintf("https://api.mapbox.com/directions/v5/mapbox/driving/%f,%f;%f,%f?alternatives=true&geometries=geojson&language=en&overview=full&steps=true&access_token=%s", obj.StartX, obj.StartY, obj.EndX, obj.EndY, util.Config.Mapbox.AccessToken))
+
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		defer res.Body.Close()
+
+		w.Header().Set("Content-Type", "application/json")
+
+		if bytes, err := io.ReadAll(res.Body); err == nil {
+			w.Write(bytes)
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+	})
+
 	// Community
 	http.HandleFunc("/community/takingmyclasses", func(w http.ResponseWriter, r *http.Request) {
 
 	})
 
 	util.Log.Status(fmt.Sprintf("Server started on port %d", util.Config.Server.Port))
-	http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", util.Config.Server.Port), nil)
+	http.ListenAndServe(fmt.Sprintf("%s:%d", util.Config.Server.Host, util.Config.Server.Port), nil)
 }
