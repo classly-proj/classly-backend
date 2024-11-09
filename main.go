@@ -541,7 +541,7 @@ func main() {
 	})
 
 	// Community
-	http.HandleFunc("/community", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/community/takingmyclasses", func(w http.ResponseWriter, r *http.Request) {
 
 	})
 
