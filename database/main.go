@@ -296,7 +296,15 @@ func QueryCourse(key, value string) ([]courseload.Course, error) {
 		return nil, fmt.Errorf("key %s is not queryable", key)
 	}
 
-	rows, err := db.Query(fmt.Sprintf("SELECT term_crn FROM courses WHERE %s = ?;", key), value)
+	var rows *sql.Rows
+	var err error
+
+	if key == "title" {
+		rows, err = db.Query(fmt.Sprintf("SELECT term_crn FROM courses WHERE %s LIKE ?", key), "%"+value+"%")
+	} else {
+		rows, err = db.Query(fmt.Sprintf("SELECT term_crn FROM courses WHERE %s = ?", key), value)
+	}
+
 	if err != nil {
 		return nil, err
 	}

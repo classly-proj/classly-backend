@@ -223,4 +223,76 @@ Test
             console.log(await res.json());
         }
     }
+
+    async function search() {
+        const box = document.createElement("div");
+        box.style.position = "absolute";
+        box.style.top = "50%";
+        box.style.left = "50%";
+        box.style.transform = "translate(-50%, -50%)";
+        box.style.backgroundColor = "grey";
+
+        const input = document.createElement("input");
+        input.type = "text";
+        input.placeholder = "Search";
+        input.style.width = "200px";
+        input.style.height = "30px";
+        input.style.fontSize = "20px";
+
+        box.appendChild(input);
+
+        let lastChange = null;
+
+        
+                // fetch("/course/query", {
+                //     method: "POST",
+                //     headers: {
+                //         "Content-Type": "text/plain"
+                //     },
+                //     body: JSON.stringify({ key: "title", value: lastChange })
+                // }).then(async res => {
+                //     if (res.status !== 200) {
+                //         return {
+                //             ok: false,
+                //             status: res.status
+                //         };
+                //     }
+
+                //     const courses = await res.json();
+                //     console.log(courses);
+                // });
+
+        async function searchTick() {
+            if (input.value === lastChange || input.value.length < 3) {
+                setTimeout(searchTick, 100);
+                return;
+            }
+
+            lastChange = input.value;
+
+            const response = await fetch("/course/query", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "text/plain"
+                },
+                body: JSON.stringify({ key: "title", value: lastChange })
+            });
+
+            if (response.status !== 200) {
+                return {
+                    ok: false,
+                    status: response.status
+                };
+            }
+
+            const courses = await response.json();
+            console.log(courses.map(c => `${c.COURSE_DATA.SYVSCHD_SUBJ_CODE}${c.COURSE_DATA.SYVSCHD_CRSE_NUMB} ${c.COURSE_DATA.SYVSCHD_CRSE_LONG_TITLE}`));
+
+            setTimeout(searchTick, 100);
+        }
+
+        searchTick();
+
+        document.body.appendChild(box);
+    }
 </script>

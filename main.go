@@ -308,7 +308,6 @@ func main() {
 
 		// Require authentication due to expensive operation
 		if !withAuth(w, r) {
-			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
 
