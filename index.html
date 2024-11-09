@@ -1,0 +1,119 @@
+Test
+
+<script>
+
+    function creds() {
+        const username = prompt("Enter username");
+        const password = prompt("Enter password");
+
+        return { username, password };
+    }
+
+    async function createAccount() {
+        const res = await fetch("/user/create", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(creds())
+        });
+
+        if (res.status !== 200) {
+            return {
+                ok: false,
+                status: res.status
+            };
+        }
+
+        return {
+            ok: true,
+            user: await res.json()
+        };
+    }
+
+    async function login() {
+        const res = await fetch("/user/login", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(creds())
+        });
+
+        if (res.status !== 200) {
+            return {
+                ok: false,
+                status: res.status
+            };
+        }
+
+        return {
+            ok: true
+        };
+    }
+
+    async function getUsers() {
+        const res = await fetch("/user/all", {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        });
+
+        if (res.status !== 200) {
+            return {
+                ok: false,
+                status: res.status
+            };
+        }
+
+        return {
+            ok: true,
+            users: await res.json()
+        };
+    }
+
+    async function deleteUser() {
+        const res = await fetch("/user/delete", {
+            method: "DELETE",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        });
+
+        if (res.status !== 200) {
+            return {
+                ok: false,
+                status: res.status
+            };
+        }
+
+        return {
+            ok: true
+        };
+    }
+
+    async function getUser() {
+        const res = await fetch("/user/get", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                username: prompt("Enter username")
+            })
+        });
+
+        if (res.status !== 200) {
+            return {
+                ok: false,
+                status: res.status
+            };
+        }
+
+        return {
+            ok: true,
+            user: await res.json()
+        };
+    }
+</script>
