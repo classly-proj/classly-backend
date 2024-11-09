@@ -244,6 +244,25 @@ func main() {
 		w.WriteHeader(http.StatusOK)
 	})
 
+	// Me
+	http.HandleFunc("/user/me", func(w http.ResponseWriter, r *http.Request) {
+		withCors(w)
+		if !withAuth(w, r) {
+			return
+		}
+
+		username, _ := r.Cookie("username")
+		user, err := database.GetUser(username.Value)
+
+		if err != nil {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(user.JSON())
+	})
+
 	// Logout
 	http.HandleFunc("/user/logout", func(w http.ResponseWriter, r *http.Request) {
 		withCors(w)
