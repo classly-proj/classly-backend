@@ -119,20 +119,31 @@ func OpenDatabase() (*sql.DB, error) {
 	return db, err
 }
 
-func CreateUser(username, password string) (*User, error) {
+const (
+	CREATE_USER_SUCCESS = iota
+	CREATE_USER_ERROR_IMUsed
+	CREATE_USER_ERROR_InternalServerError
+	CREATE_USER_ERROR_BadRequest
+)
+
+func CreateUser(username, password string) (*User, int) {
 	// Check if user already exists
 	_, err := GetUser(username)
 
 	if err == nil {
-		return nil, fmt.Errorf("user already exists")
+		return nil, CREATE_USER_ERROR_IMUsed
 	}
 
 	_, err = db.Exec(INSERT_USER_STATEMENT, username, HashPassword(password), "")
 	if err != nil {
-		return nil, fmt.Errorf("failed to create user: %v", err)
+		return nil, CREATE_USER_ERROR_InternalServerError
 	}
 
-	return GetUser(username)
+	if user, err := GetUser(username); err == nil {
+		return user, 0
+	} else {
+		return nil, CREATE_USER_ERROR_InternalServerError
+	}
 }
 
 func GetUser(username string) (*User, error) {

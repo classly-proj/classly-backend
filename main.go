@@ -174,10 +174,18 @@ func main() {
 			return
 		}
 
-		user, err := database.CreateUser(obj.Username, obj.Password)
+		user, statusCode := database.CreateUser(obj.Username, obj.Password)
 
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
+		if statusCode != database.CREATE_USER_SUCCESS {
+			switch statusCode {
+			case database.CREATE_USER_ERROR_IMUsed:
+				w.WriteHeader(http.StatusIMUsed)
+			case database.CREATE_USER_ERROR_BadRequest:
+				w.WriteHeader(http.StatusBadRequest)
+			default:
+				w.WriteHeader(http.StatusInternalServerError)
+			}
+
 			return
 		}
 
@@ -532,14 +540,9 @@ func main() {
 		}
 	})
 
-	// Private resource
-	http.HandleFunc("/private", func(w http.ResponseWriter, r *http.Request) {
-		withCors(w)
-		if !withAuth(w, r) {
-			return
-		}
+	// Community
+	http.HandleFunc("/community", func(w http.ResponseWriter, r *http.Request) {
 
-		w.Write([]byte("You can see this because you are logged in!"))
 	})
 
 	util.Log.Status(fmt.Sprintf("Server started on port %d", PORT))
