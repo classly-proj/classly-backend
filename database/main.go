@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"time"
 
+	"hacknhbackend.eparker.dev/util"
 	_ "modernc.org/sqlite"
 )
 
@@ -62,7 +63,7 @@ func OpenDatabase() (*sql.DB, error) {
 	var err error
 
 	for i := 0; i < maxRetries; i++ {
-		db, err = sql.Open("sqlite", "hacknh.db")
+		db, err = sql.Open("sqlite", util.Config.Database.FileName)
 		if err == nil {
 			break
 		}

@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"sync"
 	"time"
+
+	"hacknhbackend.eparker.dev/util"
 )
 
 type Operation struct {
@@ -25,11 +27,12 @@ var (
 func GetQueue() *DBQueue {
 	once.Do(func() {
 		queue = &DBQueue{
-			operations: make(chan Operation, 100),
+			operations: make(chan Operation, util.Config.Database.QueueSize),
 			shutdown:   make(chan struct{}),
 		}
 		queue.start()
 	})
+
 	return queue
 }
 

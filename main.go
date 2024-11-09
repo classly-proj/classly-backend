@@ -13,8 +13,6 @@ import (
 	"hacknhbackend.eparker.dev/util"
 )
 
-const PORT int = 8000
-
 type Token struct {
 	Username, Token string
 	Expires         time.Time
@@ -81,9 +79,12 @@ func withCors(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	util.LoadEnvFile()
 	database.Init()
 
-	go database.CourseUpdates()
+	if util.Config.General.UpdateCourses {
+		go database.CourseUpdates()
+	}
 
 	// Basic http server
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -566,6 +567,6 @@ func main() {
 
 	})
 
-	util.Log.Status(fmt.Sprintf("Server started on port %d", PORT))
-	http.ListenAndServe(fmt.Sprintf("127.0.0.1:%d", PORT), nil)
+	util.Log.Status(fmt.Sprintf("Server started on port %d", util.Config.Server.Port))
+	http.ListenAndServe(fmt.Sprintf("127.0.0.1:%d", util.Config.Server.Port), nil)
 }
