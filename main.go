@@ -65,6 +65,22 @@ func withAuth(w http.ResponseWriter, r *http.Request) bool {
 }
 
 func main() {
+	// start := time.Now()
+	// courses := courseload.LoadCourses()
+	// fmt.Printf("Loaded %d courses in %v\n", len(courses), time.Since(start))
+
+	// database.Init()
+
+	// database.InsertCourse(courses[1])
+
+	// c, e := database.GetCourse(courses[1].TERM_CRN)
+
+	// if e != nil {
+	// 	fmt.Println(e)
+	// }
+
+	// fmt.Printf("%v %v\n", courses[1].COURSE_DATA.INSTRUCTORS[0].EMAIL, c.COURSE_DATA.INSTRUCTORS[0].EMAIL)
+
 	database.Init()
 
 	// Basic http server
@@ -94,17 +110,6 @@ func main() {
 
 	// Get user (SAFE)
 	http.HandleFunc("/user/get", func(w http.ResponseWriter, r *http.Request) {
-		// username := r.URL.Query().Get("username")
-		// user, err := database.GetUser(username)
-
-		// if err != nil {
-		// 	w.WriteHeader(http.StatusNotFound)
-		// 	return
-		// }
-
-		// w.Header().Set("Content-Type", "application/json")
-		// w.Write(user.JSON())
-
 		if r.Method != "POST" {
 			w.WriteHeader(http.StatusMethodNotAllowed)
 			return
@@ -298,5 +303,5 @@ func main() {
 		w.Write([]byte("You can see this because you are logged in!"))
 	})
 
-	http.ListenAndServe("127.0.0.1:80", nil)
+	http.ListenAndServe("127.0.0.1:8000", nil)
 }
