@@ -55,20 +55,20 @@ func CourseUpdates() {
 }
 
 func InsertCourse(course courseload.Course) error {
-	_, err := db.Exec(INSERT_COURSE_STATEMENT, course.CRN, course.Data.Title, course.Data.Subject, course.Data.Number, course.Data.Description)
+	err := QueuedExec(INSERT_COURSE_STATEMENT, course.CRN, course.Data.Title, course.Data.Subject, course.Data.Number, course.Data.Description)
 	if err != nil {
 		return err
 	}
 
 	for _, instructor := range course.Data.Instructors {
-		_, err := db.Exec(INSERT_INSTUCTOR_STATEMENT, instructor.LastName, instructor.FirstName, instructor.Email, course.CRN)
+		err := QueuedExec(INSERT_INSTUCTOR_STATEMENT, instructor.LastName, instructor.FirstName, instructor.Email, course.CRN)
 		if err != nil {
 			return err
 		}
 	}
 
 	for _, meeting := range course.Data.Meetings {
-		_, err := db.Exec(INSERT_MEETING_STATEMENT, meeting.Days, meeting.Building, meeting.Room, meeting.Time, course.CRN)
+		err := QueuedExec(INSERT_MEETING_STATEMENT, meeting.Days, meeting.Building, meeting.Room, meeting.Time, course.CRN)
 		if err != nil {
 			return err
 		}
@@ -78,17 +78,17 @@ func InsertCourse(course courseload.Course) error {
 }
 
 func DeleteCourse(term_crn string) error {
-	_, err := db.Exec("DELETE FROM courses WHERE term_crn = ?;", term_crn)
+	err := QueuedExec("DELETE FROM courses WHERE term_crn = ?;", term_crn)
 	if err != nil {
 		return err
 	}
 
-	_, err = db.Exec("DELETE FROM instructors WHERE term_crn = ?;", term_crn)
+	err = QueuedExec("DELETE FROM instructors WHERE term_crn = ?;", term_crn)
 	if err != nil {
 		return err
 	}
 
-	_, err = db.Exec("DELETE FROM meetings WHERE term_crn = ?;", term_crn)
+	err = QueuedExec("DELETE FROM meetings WHERE term_crn = ?;", term_crn)
 	if err != nil {
 		return err
 	}
@@ -97,7 +97,7 @@ func DeleteCourse(term_crn string) error {
 }
 
 func GetCourse(term_crn string) (*courseload.Course, error) {
-	row := db.QueryRow(SELECT_COUSE_STATEMENT, term_crn)
+	row := QueuedQueryRow(SELECT_COUSE_STATEMENT, term_crn)
 
 	var title, subject_code, course_number, description string
 	err := row.Scan(&term_crn, &title, &subject_code, &course_number, &description)
@@ -106,7 +106,7 @@ func GetCourse(term_crn string) (*courseload.Course, error) {
 	}
 
 	instructors := make([]courseload.Instructor, 0)
-	rows, err := db.Query(SELECT_INSTRUCTORS_STATEMENT, term_crn)
+	rows, err := QueuedQuery(SELECT_INSTRUCTORS_STATEMENT, term_crn)
 	if err != nil {
 		return nil, err
 	}
@@ -127,7 +127,7 @@ func GetCourse(term_crn string) (*courseload.Course, error) {
 	}
 
 	meetings := make([]courseload.Meeting, 0)
-	rows, err = db.Query(SELECT_MEETINGS_STATEMENT, term_crn)
+	rows, err = QueuedQuery(SELECT_MEETINGS_STATEMENT, term_crn)
 	if err != nil {
 		return nil, err
 	}
@@ -162,7 +162,7 @@ func GetCourse(term_crn string) (*courseload.Course, error) {
 }
 
 func GetCourseCRNs() ([]string, error) {
-	rows, err := db.Query("SELECT term_crn FROM courses;")
+	rows, err := QueuedQuery("SELECT term_crn FROM courses;")
 	if err != nil {
 		return nil, err
 	}
@@ -200,11 +200,11 @@ func QueryCourse(key string, values ...string) ([]courseload.Course, error) {
 
 	switch key {
 	case "title":
-		rows, err = db.Query("SELECT term_crn FROM courses WHERE title LIKE ?", "%"+values[0]+"%")
+		rows, err = QueuedQuery("SELECT term_crn FROM courses WHERE title LIKE ?", "%"+values[0]+"%")
 	case "subject-number":
-		rows, err = db.Query("SELECT term_crn FROM courses WHERE subject_code = ? AND course_number LIKE ?", values[0], "%"+values[1]+"%")
+		rows, err = QueuedQuery("SELECT term_crn FROM courses WHERE subject_code = ? AND course_number LIKE ?", values[0], "%"+values[1]+"%")
 	default:
-		rows, err = db.Query("SELECT term_crn FROM courses WHERE "+key+" = ?", values[0])
+		rows, err = QueuedQuery("SELECT term_crn FROM courses WHERE "+key+" = ?", values[0])
 	}
 
 	if err != nil {

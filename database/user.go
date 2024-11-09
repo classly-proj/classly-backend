@@ -1,6 +1,8 @@
 package database
 
-import "strings"
+import (
+	"strings"
+)
 
 func CreateUser(username, password string) (*User, int) {
 	// Check if user already exists
@@ -10,7 +12,7 @@ func CreateUser(username, password string) (*User, int) {
 		return nil, CREATE_USER_ERROR_IMUsed
 	}
 
-	_, err = db.Exec(INSERT_USER_STATEMENT, username, HashPassword(password), "")
+	err = QueuedExec(INSERT_USER_STATEMENT, username, HashPassword(password), "")
 	if err != nil {
 		return nil, CREATE_USER_ERROR_InternalServerError
 	}
@@ -23,7 +25,7 @@ func CreateUser(username, password string) (*User, int) {
 }
 
 func GetUser(username string) (*User, error) {
-	row := db.QueryRow(SELECT_USER_STATEMENT, username)
+	row := QueuedQueryRow(SELECT_USER_STATEMENT, username)
 
 	var id int
 	var name, password, classes string
@@ -48,12 +50,11 @@ func GetUser(username string) (*User, error) {
 }
 
 func DeleteUser(username string) error {
-	_, err := db.Exec("DELETE FROM users WHERE username = ?;", username)
-	return err
+	return QueuedExec("DELETE FROM users WHERE username = ?;", username)
 }
 
 func AllUsers() ([]User, error) {
-	rows, err := db.Query("SELECT id, username, password, classes FROM users;")
+	rows, err := QueuedQuery("SELECT id, username, password, classes FROM users;")
 	if err != nil {
 		return nil, err
 	}

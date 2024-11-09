@@ -192,6 +192,22 @@ func main() {
 			return
 		}
 
+		http.SetCookie(w, &http.Cookie{
+			Name:     "username",
+			Value:    obj.Username,
+			Path:     "/",
+			SameSite: http.SameSiteNoneMode,
+			Secure:   true,
+		})
+
+		http.SetCookie(w, &http.Cookie{
+			Name:     "token",
+			Value:    TokenFor(obj.Username),
+			Path:     "/",
+			SameSite: http.SameSiteNoneMode,
+			Secure:   true,
+		})
+
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(user.JSON())
 

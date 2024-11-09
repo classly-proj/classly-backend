@@ -3,6 +3,7 @@ package database
 import (
 	"crypto/sha256"
 	"encoding/json"
+	"fmt"
 	"strings"
 )
 
@@ -30,7 +31,7 @@ func (u *User) AddClass(crn string) {
 
 	u.Classes = append(u.Classes, crn)
 
-	db.Exec("UPDATE users SET classes = ? WHERE username = ?;", strings.Join(u.Classes, ","), u.Username)
+	QueuedExec("UPDATE users SET classes = ? WHERE username = ?;", strings.Join(u.Classes, ","), u.Username)
 }
 
 func (u *User) RemoveClass(crn string) {
@@ -41,7 +42,7 @@ func (u *User) RemoveClass(crn string) {
 		}
 	}
 
-	db.Exec("UPDATE users SET classes = ? WHERE username = ?;", strings.Join(u.Classes, ","), u.Username)
+	QueuedExec("UPDATE users SET classes = ? WHERE username = ?;", strings.Join(u.Classes, ","), u.Username)
 }
 
 func (u *User) JSON() []byte {
@@ -59,3 +60,5 @@ const (
 	CREATE_USER_ERROR_InternalServerError
 	CREATE_USER_ERROR_BadRequest
 )
+
+var ErrorQueueTimeout error = fmt.Errorf("queue timeout")
