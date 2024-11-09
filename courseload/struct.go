@@ -3,30 +3,30 @@ package courseload
 import "encoding/json"
 
 type Instructor struct {
-	LAST_NAME  string `json:"LAST_NAME"`
-	FIRST_NAME string `json:"FIRST_NAME"`
-	EMAIL      string `json:"EMAIL"`
+	LastName  string `json:"LAST_NAME"`
+	FirstName string `json:"FIRST_NAME"`
+	Email     string `json:"EMAIL"`
 }
 
 type Meeting struct {
-	DAYS     string `json:"DAYS"`
-	BUILDING string `json:"BUILDING"`
-	ROOM     string `json:"ROOM"`
-	TIME     string `json:"TIME"`
+	Days     string `json:"DAYS"`
+	Building string `json:"BUILDING"`
+	Room     string `json:"ROOM"`
+	Time     string `json:"TIME"`
 }
 
 type CourseData struct {
-	SYVSCHD_CRSE_LONG_TITLE string       `json:"SYVSCHD_CRSE_LONG_TITLE"`
-	SYVSCHD_SUBJ_CODE       string       `json:"SYVSCHD_SUBJ_CODE"`
-	SYVSCHD_CRSE_NUMB       string       `json:"SYVSCHD_CRSE_NUMB"`
-	SYVSCHD_CRSE_DESC       string       `json:"SYVSCHD_CRSE_DESC"`
-	INSTRUCTORS             []Instructor `json:"INSTRUCTORS"`
-	MEETINGS                []Meeting    `json:"MEETINGS"`
+	Title       string       `json:"SYVSCHD_CRSE_LONG_TITLE"`
+	Subject     string       `json:"SYVSCHD_SUBJ_CODE"`
+	Number      string       `json:"SYVSCHD_CRSE_NUMB"`
+	Description string       `json:"SYVSCHD_CRSE_DESC"`
+	Instructors []Instructor `json:"INSTRUCTORS"`
+	Meetings    []Meeting    `json:"MEETINGS"`
 }
 
 type Course struct {
-	TERM_CRN    string     `json:"TERM_CRN"`
-	COURSE_DATA CourseData `json:"COURSE_DATA"`
+	CRN  string     `json:"TERM_CRN"`
+	Data CourseData `json:"COURSE_DATA"`
 }
 
 func (c *Course) JSON() []byte {

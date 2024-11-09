@@ -9,7 +9,10 @@ import (
 	"time"
 
 	"hacknhbackend.eparker.dev/database"
+	"hacknhbackend.eparker.dev/util"
 )
+
+const PORT int = 8000
 
 type Token struct {
 	Username, Token string
@@ -90,7 +93,6 @@ func main() {
 		users, err := database.AllUsers()
 
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
@@ -180,6 +182,8 @@ func main() {
 
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(user.JSON())
+
+		util.Log.AddUser(fmt.Sprintf("User %s created", obj.Username))
 	})
 
 	// Login
@@ -294,6 +298,125 @@ func main() {
 		})
 
 		w.WriteHeader(http.StatusOK)
+
+		util.Log.RemoveUser(fmt.Sprintf("User %s deleted", username.Value))
+	})
+
+	// Get all courses
+	http.HandleFunc("/course/all", func(w http.ResponseWriter, r *http.Request) {
+		withCors(w)
+
+		// Require authentication due to expensive operation
+		if !withAuth(w, r) {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+
+		courses, err := database.GetCourseCRNs()
+
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		if jsonCourses, err := json.Marshal(courses); err == nil {
+			w.Header().Set("Content-Type", "application/json")
+			w.Write(jsonCourses)
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+	})
+
+	// Get course
+	http.HandleFunc("/course/get", func(w http.ResponseWriter, r *http.Request) {
+		withCors(w)
+		if r.Method != "POST" {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+
+		if r.Header.Get("Content-Type") != "text/plain" {
+			w.WriteHeader(http.StatusUnsupportedMediaType)
+			return
+		}
+
+		body := make([]byte, r.ContentLength)
+		r.Body.Read(body)
+
+		obj := struct {
+			CRN string `json:"crn"`
+		}{}
+
+		err := json.Unmarshal(body, &obj)
+
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		course, err := database.GetCourse(obj.CRN)
+
+		if err != nil {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(course.JSON())
+	})
+
+	// Get courses by subject code
+	http.HandleFunc("/course/query/list", func(w http.ResponseWriter, r *http.Request) {
+		withCors(w)
+
+		if jsonCourses, err := json.Marshal(database.QueryableKeys); err == nil {
+			w.Header().Set("Content-Type", "application/json")
+			w.Write(jsonCourses)
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+	})
+
+	http.HandleFunc("/course/query", func(w http.ResponseWriter, r *http.Request) {
+		withCors(w)
+		if r.Method != "POST" {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+
+		if r.Header.Get("Content-Type") != "text/plain" {
+			w.WriteHeader(http.StatusUnsupportedMediaType)
+			return
+		}
+
+		body := make([]byte, r.ContentLength)
+		r.Body.Read(body)
+
+		obj := struct {
+			QueryKey   string `json:"key"`
+			QueryValue string `json:"value"`
+		}{}
+
+		err := json.Unmarshal(body, &obj)
+
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		courses, err := database.QueryCourse(obj.QueryKey, obj.QueryValue)
+
+		if err != nil {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+
+		if jsonCourses, err := json.Marshal(courses); err == nil {
+			w.Header().Set("Content-Type", "application/json")
+			w.Write(jsonCourses)
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
 	})
 
 	// Private resource
@@ -306,5 +429,6 @@ func main() {
 		w.Write([]byte("You can see this because you are logged in!"))
 	})
 
-	http.ListenAndServe("127.0.0.1:8000", nil)
+	util.Log.Status(fmt.Sprintf("Server started on port %d", PORT))
+	http.ListenAndServe(fmt.Sprintf("127.0.0.1:%d", PORT), nil)
 }

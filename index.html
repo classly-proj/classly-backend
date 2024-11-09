@@ -114,3 +114,113 @@ Test
         };
     }
 </script>
+
+<script>
+    async function getCourseCRNS() {
+        const res = await fetch("/course/all");
+
+        if (res.status !== 200) {
+            return {
+                ok: false,
+                status: res.status
+            };
+        }
+
+        return {
+            ok: true,
+            crns: await res.json()
+        };
+    }
+
+    async function getCourse() {
+        const res = await fetch("/course/get", {
+            method: "POST",
+            headers: {
+                "Content-Type": "text/plain"
+            },
+            body: JSON.stringify({
+                crn: prompt("Enter CRN")
+            })
+        });
+
+        if (res.status !== 200) {
+            return {
+                ok: false,
+                status: res.status
+            };
+        }
+
+        return {
+            ok: true,
+            course: await res.json()
+        };
+    }
+
+    async function getCourseBySubject() {
+        const res = await fetch("/course/subject", {
+            method: "POST",
+            headers: {
+                "Content-Type": "text/plain"
+            },
+            body: JSON.stringify({
+                subject_code: prompt("Enter subject")
+            })
+        });
+
+        if (res.status !== 200) {
+            return {
+                ok: false,
+                status: res.status
+            };
+        }
+
+        return {
+            ok: true,
+            courses: await res.json()
+        };
+    }
+
+    async function queriableCourses() {
+        const res = await fetch("/course/query/list");
+
+        if (res.status !== 200) {
+            return {
+                ok: false,
+                status: res.status
+            };
+        }
+
+        const queriableKeys = Object.keys(await res.json());
+        console.log(queriableKeys);
+
+        while (true) {
+            const key = prompt("Enter key to query\n\n" + queriableKeys.join("\n") + "\n\nType 'exit' to exit");
+            if (key === "exit") {
+                break;
+            }
+
+            if (!queriableKeys.includes(key)) {
+                alert("Invalid key");
+                continue;
+            }
+
+            const value = prompt("Enter value to query");
+            const res = await fetch("/course/query", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "text/plain"
+                },
+                body: JSON.stringify({ key, value })
+            });
+
+            if (res.status !== 200) {
+                return {
+                    ok: false,
+                    status: res.status
+                };
+            }
+
+            console.log(await res.json());
+        }
+    }
+</script>

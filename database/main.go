@@ -157,23 +157,42 @@ func AllUsers() ([]User, error) {
 }
 
 func InsertCourse(course courseload.Course) error {
-	_, err := db.Exec(INSERT_COURSE_STATEMENT, course.TERM_CRN, course.COURSE_DATA.SYVSCHD_CRSE_LONG_TITLE, course.COURSE_DATA.SYVSCHD_SUBJ_CODE, course.COURSE_DATA.SYVSCHD_CRSE_NUMB, course.COURSE_DATA.SYVSCHD_CRSE_DESC)
+	_, err := db.Exec(INSERT_COURSE_STATEMENT, course.CRN, course.Data.Title, course.Data.Subject, course.Data.Number, course.Data.Description)
 	if err != nil {
 		return err
 	}
 
-	for _, instructor := range course.COURSE_DATA.INSTRUCTORS {
-		_, err := db.Exec(INSERT_INSTUCTOR_STATEMENT, instructor.LAST_NAME, instructor.FIRST_NAME, instructor.EMAIL, course.TERM_CRN)
+	for _, instructor := range course.Data.Instructors {
+		_, err := db.Exec(INSERT_INSTUCTOR_STATEMENT, instructor.LastName, instructor.FirstName, instructor.Email, course.CRN)
 		if err != nil {
 			return err
 		}
 	}
 
-	for _, meeting := range course.COURSE_DATA.MEETINGS {
-		_, err := db.Exec(INSERT_MEETING_STATEMENT, meeting.DAYS, meeting.BUILDING, meeting.ROOM, meeting.TIME, course.TERM_CRN)
+	for _, meeting := range course.Data.Meetings {
+		_, err := db.Exec(INSERT_MEETING_STATEMENT, meeting.Days, meeting.Building, meeting.Room, meeting.Time, course.CRN)
 		if err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+func DeleteCourse(term_crn string) error {
+	_, err := db.Exec("DELETE FROM courses WHERE term_crn = ?;", term_crn)
+	if err != nil {
+		return err
+	}
+
+	_, err = db.Exec("DELETE FROM instructors WHERE term_crn = ?;", term_crn)
+	if err != nil {
+		return err
+	}
+
+	_, err = db.Exec("DELETE FROM meetings WHERE term_crn = ?;", term_crn)
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -203,9 +222,9 @@ func GetCourse(term_crn string) (*courseload.Course, error) {
 		}
 
 		instructors = append(instructors, courseload.Instructor{
-			LAST_NAME:  last_name,
-			FIRST_NAME: first_name,
-			EMAIL:      email,
+			LastName:  last_name,
+			FirstName: first_name,
+			Email:     email,
 		})
 	}
 
@@ -224,22 +243,22 @@ func GetCourse(term_crn string) (*courseload.Course, error) {
 		}
 
 		meetings = append(meetings, courseload.Meeting{
-			DAYS:     days,
-			BUILDING: building,
-			ROOM:     room,
-			TIME:     time,
+			Days:     days,
+			Building: building,
+			Room:     room,
+			Time:     time,
 		})
 	}
 
 	return &courseload.Course{
-		TERM_CRN: term_crn,
-		COURSE_DATA: courseload.CourseData{
-			SYVSCHD_CRSE_LONG_TITLE: title,
-			SYVSCHD_SUBJ_CODE:       subject_code,
-			SYVSCHD_CRSE_NUMB:       course_number,
-			SYVSCHD_CRSE_DESC:       description,
-			INSTRUCTORS:             instructors,
-			MEETINGS:                meetings,
+		CRN: term_crn,
+		Data: courseload.CourseData{
+			Title:       title,
+			Subject:     subject_code,
+			Number:      course_number,
+			Description: description,
+			Instructors: instructors,
+			Meetings:    meetings,
 		},
 	}, nil
 }
@@ -260,6 +279,43 @@ func GetCourseCRNs() ([]string, error) {
 		}
 
 		courses = append(courses, term_crn)
+	}
+
+	return courses, nil
+}
+
+var QueryableKeys = map[string]bool{
+	"term_crn":      true,
+	"title":         true,
+	"subject_code":  true,
+	"course_number": true,
+}
+
+func QueryCourse(key, value string) ([]courseload.Course, error) {
+	if _, ok := QueryableKeys[key]; !ok {
+		return nil, fmt.Errorf("key %s is not queryable", key)
+	}
+
+	rows, err := db.Query(fmt.Sprintf("SELECT term_crn FROM courses WHERE %s = ?;", key), value)
+	if err != nil {
+		return nil, err
+	}
+
+	courses := make([]courseload.Course, 0)
+
+	for rows.Next() {
+		var term_crn string
+		err = rows.Scan(&term_crn)
+		if err != nil {
+			return nil, err
+		}
+
+		course, err := GetCourse(term_crn)
+		if err != nil {
+			return nil, err
+		}
+
+		courses = append(courses, *course)
 	}
 
 	return courses, nil
