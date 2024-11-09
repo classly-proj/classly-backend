@@ -21,23 +21,25 @@ type User struct {
 	Privilege                                int
 }
 
-func (u *User) AddClass(crn string) {
+func (u *User) AddClass(crn string) error {
 	if _, err := GetCourse(crn); err != nil {
-		return
+		return nil
 	}
 
 	for _, class := range u.Courses {
 		if class == crn {
-			return
+			return nil
 		}
 	}
 
 	u.Courses = append(u.Courses, crn)
 
-	QueuedExec("UPDATE users SET classes = ? WHERE email = ?;", strings.Join(u.Courses, ","), u.Email)
+	fmt.Println("Adding class:", strings.Join(u.Courses, ","))
+
+	return QueuedExec("UPDATE users SET classes = ? WHERE email = ?;", strings.Join(u.Courses, ","), u.Email)
 }
 
-func (u *User) RemoveClass(crn string) {
+func (u *User) RemoveClass(crn string) error {
 	for i, class := range u.Courses {
 		if class == crn {
 			u.Courses = append(u.Courses[:i], u.Courses[i+1:]...)
@@ -45,7 +47,7 @@ func (u *User) RemoveClass(crn string) {
 		}
 	}
 
-	QueuedExec("UPDATE users SET classes = ? WHERE email = ?;", strings.Join(u.Courses, ","), u.Email)
+	return QueuedExec("UPDATE users SET classes = ? WHERE email = ?;", strings.Join(u.Courses, ","), u.Email)
 }
 
 func (u *User) JSON() []byte {

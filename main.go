@@ -393,7 +393,10 @@ func main() {
 		}
 
 		for _, crn := range crns {
-			user.AddClass(crn)
+			if err := user.AddClass(crn); err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
 		}
 
 		w.WriteHeader(http.StatusOK)

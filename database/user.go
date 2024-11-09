@@ -27,9 +27,10 @@ func CreateUser(email, first, last, password string) (*User, int) {
 func GetUser(email string) (*User, error) {
 	row := QueuedQueryRow(SELECT_USER_STATEMENT, email)
 
+	var intPtr int
 	var user User
 	var courses string
-	err := row.Scan(&user.Email, &user.FirstName, &user.LastName, &user.PasswordHash, &courses, &user.Privilege)
+	err := row.Scan(&intPtr, &user.Email, &user.FirstName, &user.LastName, &user.PasswordHash, &courses, &user.Privilege)
 	if err != nil {
 		return nil, err
 	}
@@ -56,9 +57,10 @@ func AllUsers() ([]User, error) {
 	users := make([]User, 0)
 
 	for rows.Next() {
+		var idPtr int
 		var user User
 		var courses string
-		err := rows.Scan(&user.Email, &user.FirstName, &user.LastName, &user.PasswordHash, &courses, &user.Privilege)
+		err := rows.Scan(&idPtr, &user.Email, &user.FirstName, &user.LastName, &user.PasswordHash, &courses, &user.Privilege)
 		if err != nil {
 			return nil, err
 		}
