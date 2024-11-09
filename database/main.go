@@ -2,55 +2,12 @@ package database
 
 import (
 	"database/sql"
-	"encoding/json"
 	"fmt"
-	"strings"
 	"time"
 
 	"hacknhbackend.eparker.dev/courseload"
 	_ "modernc.org/sqlite"
 )
-
-type User struct {
-	Username, PasswordHash string
-	Classes                []string
-}
-
-func (u *User) AddClass(crn string) {
-	if _, err := GetCourse(crn); err != nil {
-		return
-	}
-
-	for _, class := range u.Classes {
-		if class == crn {
-			return
-		}
-	}
-
-	u.Classes = append(u.Classes, crn)
-
-	db.Exec("UPDATE users SET classes = ? WHERE username = ?;", strings.Join(u.Classes, ","), u.Username)
-}
-
-func (u *User) RemoveClass(crn string) {
-	for i, class := range u.Classes {
-		if class == crn {
-			u.Classes = append(u.Classes[:i], u.Classes[i+1:]...)
-			break
-		}
-	}
-
-	db.Exec("UPDATE users SET classes = ? WHERE username = ?;", strings.Join(u.Classes, ","), u.Username)
-}
-
-func (u *User) JSON() []byte {
-	bytes, _ := json.Marshal(map[string]interface{}{
-		"username": u.Username,
-		"classes":  u.Classes,
-	})
-
-	return bytes
-}
 
 const COURSES_STATEMENT = `CREATE TABLE IF NOT EXISTS courses (
     term_crn TEXT PRIMARY KEY,
@@ -99,7 +56,6 @@ const SELECT_MEETINGS_STATEMENT = `SELECT id, days, building, room, time FROM me
 const (
 	maxRetries = 5
 	baseDelay  = 100 * time.Millisecond
-	maxDelay   = 2 * time.Second
 )
 
 var db *sql.DB
@@ -117,97 +73,6 @@ func OpenDatabase() (*sql.DB, error) {
 	}
 
 	return db, err
-}
-
-const (
-	CREATE_USER_SUCCESS = iota
-	CREATE_USER_ERROR_IMUsed
-	CREATE_USER_ERROR_InternalServerError
-	CREATE_USER_ERROR_BadRequest
-)
-
-func CreateUser(username, password string) (*User, int) {
-	// Check if user already exists
-	_, err := GetUser(username)
-
-	if err == nil {
-		return nil, CREATE_USER_ERROR_IMUsed
-	}
-
-	_, err = db.Exec(INSERT_USER_STATEMENT, username, HashPassword(password), "")
-	if err != nil {
-		return nil, CREATE_USER_ERROR_InternalServerError
-	}
-
-	if user, err := GetUser(username); err == nil {
-		return user, 0
-	} else {
-		return nil, CREATE_USER_ERROR_InternalServerError
-	}
-}
-
-func GetUser(username string) (*User, error) {
-	row := db.QueryRow(SELECT_USER_STATEMENT, username)
-
-	var id int
-	var name, password, classes string
-	err := row.Scan(&id, &name, &password, &classes)
-	if err != nil {
-		return nil, err
-	}
-
-	var classesArr []string
-
-	for _, class := range strings.Split(classes, ",") {
-		if class != "" {
-			classesArr = append(classesArr, class)
-		}
-	}
-
-	return &User{
-		Username:     name,
-		PasswordHash: password,
-		Classes:      classesArr,
-	}, nil
-}
-
-func DeleteUser(username string) error {
-	_, err := db.Exec("DELETE FROM users WHERE username = ?;", username)
-	return err
-}
-
-func AllUsers() ([]User, error) {
-	rows, err := db.Query("SELECT id, username, password, classes FROM users;")
-	if err != nil {
-		return nil, err
-	}
-
-	users := make([]User, 0)
-
-	for rows.Next() {
-		var id int
-		var name, password, classes string
-		err = rows.Scan(&id, &name, &password, &classes)
-		if err != nil {
-			return nil, err
-		}
-
-		var classesArr []string
-
-		for _, class := range strings.Split(classes, ",") {
-			if class != "" {
-				classesArr = append(classesArr, class)
-			}
-		}
-
-		users = append(users, User{
-			Username:     name,
-			PasswordHash: password,
-			Classes:      classesArr,
-		})
-	}
-
-	return users, nil
 }
 
 func InsertCourse(course courseload.Course) error {
