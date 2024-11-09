@@ -1,5 +1,7 @@
 package courseload
 
+import "encoding/json"
+
 type Instructor struct {
 	LAST_NAME  string `json:"LAST_NAME"`
 	FIRST_NAME string `json:"FIRST_NAME"`
@@ -25,4 +27,9 @@ type CourseData struct {
 type Course struct {
 	TERM_CRN    string     `json:"TERM_CRN"`
 	COURSE_DATA CourseData `json:"COURSE_DATA"`
+}
+
+func (c *Course) JSON() []byte {
+	b, _ := json.Marshal(c)
+	return b
 }

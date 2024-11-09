@@ -64,33 +64,43 @@ func withAuth(w http.ResponseWriter, r *http.Request) bool {
 	return true
 }
 
+func withCors(w http.ResponseWriter) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, DELETE")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+}
+
 func main() {
+	database.Init()
+
 	// start := time.Now()
 	// courses := courseload.LoadCourses()
 	// fmt.Printf("Loaded %d courses in %v\n", len(courses), time.Since(start))
 
-	// database.Init()
-
-	// database.InsertCourse(courses[1])
-
-	// c, e := database.GetCourse(courses[1].TERM_CRN)
-
-	// if e != nil {
-	// 	fmt.Println(e)
+	// for _, course := range courses {
+	// 	database.InsertCourse(course)
 	// }
 
-	// fmt.Printf("%v %v\n", courses[1].COURSE_DATA.INSTRUCTORS[0].EMAIL, c.COURSE_DATA.INSTRUCTORS[0].EMAIL)
+	// fmt.Printf("Inserted %d courses\n", len(courses))
 
-	database.Init()
+	// for _, course := range courses {
+	// 	_, err := database.GetCourse(course.TERM_CRN)
+
+	// 	if err != nil {
+	// 		fmt.Printf("Failed to get course: %v\n", err)
+	// 		continue
+	// 	}
+	// }
 
 	// Basic http server
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		// send index.html
+		withCors(w)
 		http.ServeFile(w, r, "index.html")
 	})
 
 	// All users (SAFE)
 	http.HandleFunc("/user/all", func(w http.ResponseWriter, r *http.Request) {
+		withCors(w)
 		users, err := database.AllUsers()
 
 		if err != nil {
@@ -110,6 +120,7 @@ func main() {
 
 	// Get user (SAFE)
 	http.HandleFunc("/user/get", func(w http.ResponseWriter, r *http.Request) {
+		withCors(w)
 		if r.Method != "POST" {
 			w.WriteHeader(http.StatusMethodNotAllowed)
 			return
@@ -147,6 +158,7 @@ func main() {
 
 	// Create user
 	http.HandleFunc("/user/create", func(w http.ResponseWriter, r *http.Request) {
+		withCors(w)
 		if r.Method != "POST" {
 			w.WriteHeader(http.StatusMethodNotAllowed)
 			return
@@ -185,6 +197,7 @@ func main() {
 
 	// Login
 	http.HandleFunc("/user/login", func(w http.ResponseWriter, r *http.Request) {
+		withCors(w)
 		if r.Method != "POST" {
 			w.WriteHeader(http.StatusMethodNotAllowed)
 			return
@@ -241,6 +254,7 @@ func main() {
 
 	// Logout
 	http.HandleFunc("/user/logout", func(w http.ResponseWriter, r *http.Request) {
+		withCors(w)
 		http.SetCookie(w, &http.Cookie{
 			Name:     "username",
 			Value:    "",
@@ -260,6 +274,7 @@ func main() {
 
 	// Delete user (self only)
 	http.HandleFunc("/user/delete", func(w http.ResponseWriter, r *http.Request) {
+		withCors(w)
 		if !withAuth(w, r) {
 			return
 		}
@@ -296,6 +311,7 @@ func main() {
 
 	// Private resource
 	http.HandleFunc("/private", func(w http.ResponseWriter, r *http.Request) {
+		withCors(w)
 		if !withAuth(w, r) {
 			return
 		}
