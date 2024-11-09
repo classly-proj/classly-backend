@@ -16,6 +16,33 @@ type User struct {
 	Classes                []string
 }
 
+func (u *User) AddClass(crn string) {
+	if _, err := GetCourse(crn); err != nil {
+		return
+	}
+
+	for _, class := range u.Classes {
+		if class == crn {
+			return
+		}
+	}
+
+	u.Classes = append(u.Classes, crn)
+
+	db.Exec("UPDATE users SET classes = ? WHERE username = ?;", strings.Join(u.Classes, ","), u.Username)
+}
+
+func (u *User) RemoveClass(crn string) {
+	for i, class := range u.Classes {
+		if class == crn {
+			u.Classes = append(u.Classes[:i], u.Classes[i+1:]...)
+			break
+		}
+	}
+
+	db.Exec("UPDATE users SET classes = ? WHERE username = ?;", strings.Join(u.Classes, ","), u.Username)
+}
+
 func (u *User) JSON() []byte {
 	bytes, _ := json.Marshal(map[string]interface{}{
 		"username": u.Username,
@@ -118,10 +145,18 @@ func GetUser(username string) (*User, error) {
 		return nil, err
 	}
 
+	var classesArr []string
+
+	for _, class := range strings.Split(classes, ",") {
+		if class != "" {
+			classesArr = append(classesArr, class)
+		}
+	}
+
 	return &User{
 		Username:     name,
 		PasswordHash: password,
-		Classes:      strings.Split(classes, ","),
+		Classes:      classesArr,
 	}, nil
 }
 
@@ -146,10 +181,18 @@ func AllUsers() ([]User, error) {
 			return nil, err
 		}
 
+		var classesArr []string
+
+		for _, class := range strings.Split(classes, ",") {
+			if class != "" {
+				classesArr = append(classesArr, class)
+			}
+		}
+
 		users = append(users, User{
 			Username:     name,
 			PasswordHash: password,
-			Classes:      strings.Split(classes, ","),
+			Classes:      classesArr,
 		})
 	}
 

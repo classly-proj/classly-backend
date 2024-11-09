@@ -269,7 +269,8 @@ Test
             }
 
             const courses = await response.json();
-            console.log(courses.map(c => `${c.COURSE_DATA.SYVSCHD_SUBJ_CODE}${c.COURSE_DATA.SYVSCHD_CRSE_NUMB} ${c.COURSE_DATA.SYVSCHD_CRSE_LONG_TITLE}`));
+            window.latestCourses = courses;
+            console.log(courses);
 
             setTimeout(searchTick, 100);
         }
@@ -279,9 +280,52 @@ Test
         document.body.appendChild(box);
     }
 
+    async function addCourses(...crns) {
+        const res = await fetch("/user/addclass", {
+            method: "POST",
+            headers: {
+                "Content-Type": "text/plain"
+            },
+            body: JSON.stringify(crns)
+        });
+
+        if (res.status !== 200) {
+            return {
+                ok: false,
+                status: res.status
+            };
+        }
+
+        return {
+            ok: true
+        };
+    }
+
+    async function removeCourses(...crns) {
+        const res = await fetch("/user/removeclass", {
+            method: "POST",
+            headers: {
+                "Content-Type": "text/plain"
+            },
+            body: JSON.stringify(crns)
+        });
+
+        if (res.status !== 200) {
+            return {
+                ok: false,
+                status: res.status
+            };
+        }
+
+        return {
+            ok: true
+        };
+    }
+
     const API_HOST = {
         "127.0.0.1": "http://127.0.0.1:8000",
         "localhost": "http://localhost:8000",
         "hacknhbackend": "https://hacknhbackend.herokuapp.com"
     }[window.location.hostname] || "http://localhost:8000";
+
 </script>

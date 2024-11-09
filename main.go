@@ -303,6 +303,94 @@ func main() {
 		util.Log.RemoveUser(fmt.Sprintf("User %s deleted", username.Value))
 	})
 
+	http.HandleFunc("/user/addclass", func(w http.ResponseWriter, r *http.Request) {
+		withCors(w)
+
+		if !withAuth(w, r) {
+			return
+		}
+
+		if r.Method != "POST" {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+
+		if r.Header.Get("Content-Type") != "text/plain" {
+			w.WriteHeader(http.StatusUnsupportedMediaType)
+			return
+		}
+
+		body := make([]byte, r.ContentLength)
+		r.Body.Read(body)
+
+		var crns []string
+
+		err := json.Unmarshal(body, &crns)
+
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		username, _ := r.Cookie("username")
+		user, err := database.GetUser(username.Value)
+
+		if err != nil {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+
+		for _, crn := range crns {
+			user.AddClass(crn)
+		}
+
+		w.WriteHeader(http.StatusOK)
+	})
+
+	http.HandleFunc("/user/removeclass", func(w http.ResponseWriter, r *http.Request) {
+		withCors(w)
+
+		if !withAuth(w, r) {
+			return
+		}
+
+		if r.Method != "POST" {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+
+		if r.Header.Get("Content-Type") != "text/plain" {
+			w.WriteHeader(http.StatusUnsupportedMediaType)
+			return
+		}
+
+		body := make([]byte, r.ContentLength)
+		r.Body.Read(body)
+
+		var crns []string
+
+		err := json.Unmarshal(body, &crns)
+
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		username, _ := r.Cookie("username")
+		user, err := database.GetUser(username.Value)
+
+		if err != nil {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+
+		for _, crn := range crns {
+			user.RemoveClass(crn)
+		}
+
+		w.WriteHeader(http.StatusOK)
+	})
+
 	// Get all courses
 	http.HandleFunc("/course/all", func(w http.ResponseWriter, r *http.Request) {
 		withCors(w)
