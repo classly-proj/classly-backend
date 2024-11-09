@@ -10,8 +10,8 @@ import (
 
 var Config struct {
 	Database struct {
-		FileName  string
-		QueueSize int
+		FileName, PasswordSalt string
+		QueueSize              int
 	}
 
 	Server struct {
@@ -53,6 +53,7 @@ func LoadEnvFile() {
 
 				file.WriteString("DATABASE_FILE_NAME=\n")
 				file.WriteString("DATABASE_QUEUE_SIZE=\n")
+				file.WriteString("DATABASE_PASSWORD_SALT=\n")
 				file.WriteString("SERVER_PORT=\n")
 				file.WriteString("GENERAL_UPDATE_COURSES=\n")
 
@@ -92,6 +93,13 @@ func LoadEnvFile() {
 		} else {
 			Config.Database.QueueSize = int(i)
 		}
+	}
+
+	if tmp = os.Getenv("DATABASE_PASSWORD_SALT"); tmp == "" {
+		Log.Error("DATABASE_PASSWORD_SALT not set (string)")
+		os.Exit(1)
+	} else {
+		Config.Database.PasswordSalt = tmp.(string)
 	}
 
 	if tmp = os.Getenv("SERVER_PORT"); tmp == "" {

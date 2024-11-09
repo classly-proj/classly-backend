@@ -5,11 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+
+	"hacknhbackend.eparker.dev/util"
 )
 
 func HashPassword(password string) string {
 	hash := sha256.New()
-	hash.Write([]byte(password))
+	hash.Write([]byte(util.Config.Database.PasswordSalt + password))
 	return string(hash.Sum(nil))
 }
 
