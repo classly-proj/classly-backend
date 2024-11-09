@@ -67,11 +67,14 @@ func withAuth(w http.ResponseWriter, r *http.Request) bool {
 
 	return true
 }
+func withCors(w http.ResponseWriter, r *http.Request) {
+	origin := r.Header.Get("Origin")
+	if origin != "" {
+		w.Header().Set("Access-Control-Allow-Origin", origin)
+	}
 
-func withCors(w http.ResponseWriter) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods", "*")
-	w.Header().Set("Access-Control-Allow-Headers", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	w.Header().Set("Access-Control-Allow-Credentials", "true")
 	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 	w.Header().Set("Pragma", "no-cache")
@@ -84,13 +87,13 @@ func main() {
 
 	// Basic http server
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		withCors(w)
+		withCors(w, r)
 		http.ServeFile(w, r, "index.html")
 	})
 
 	// All users (SAFE)
 	http.HandleFunc("/user/all", func(w http.ResponseWriter, r *http.Request) {
-		withCors(w)
+		withCors(w, r)
 		users, err := database.AllUsers()
 
 		if err != nil {
@@ -109,7 +112,7 @@ func main() {
 
 	// Get user (SAFE)
 	http.HandleFunc("/user/get", func(w http.ResponseWriter, r *http.Request) {
-		withCors(w)
+		withCors(w, r)
 		if r.Method != "POST" {
 			w.WriteHeader(http.StatusMethodNotAllowed)
 			return
@@ -147,7 +150,7 @@ func main() {
 
 	// Create user
 	http.HandleFunc("/user/create", func(w http.ResponseWriter, r *http.Request) {
-		withCors(w)
+		withCors(w, r)
 
 		if r.Method != "POST" {
 			w.WriteHeader(http.StatusMethodNotAllowed)
@@ -197,7 +200,7 @@ func main() {
 
 	// Login
 	http.HandleFunc("/user/login", func(w http.ResponseWriter, r *http.Request) {
-		withCors(w)
+		withCors(w, r)
 		if r.Method != "POST" {
 			w.WriteHeader(http.StatusMethodNotAllowed)
 			return
@@ -239,14 +242,16 @@ func main() {
 			Name:     "username",
 			Value:    obj.Username,
 			Path:     "/",
-			HttpOnly: true,
+			SameSite: http.SameSiteNoneMode,
+			Secure:   true,
 		})
 
 		http.SetCookie(w, &http.Cookie{
 			Name:     "token",
 			Value:    TokenFor(obj.Username),
 			Path:     "/",
-			HttpOnly: true,
+			SameSite: http.SameSiteNoneMode,
+			Secure:   true,
 		})
 
 		w.WriteHeader(http.StatusOK)
@@ -254,7 +259,7 @@ func main() {
 
 	// Me
 	http.HandleFunc("/user/me", func(w http.ResponseWriter, r *http.Request) {
-		withCors(w)
+		withCors(w, r)
 		if !withAuth(w, r) {
 			return
 		}
@@ -273,7 +278,7 @@ func main() {
 
 	// Logout
 	http.HandleFunc("/user/logout", func(w http.ResponseWriter, r *http.Request) {
-		withCors(w)
+		withCors(w, r)
 		http.SetCookie(w, &http.Cookie{
 			Name:     "username",
 			Value:    "",
@@ -293,7 +298,7 @@ func main() {
 
 	// Delete user (self only)
 	http.HandleFunc("/user/delete", func(w http.ResponseWriter, r *http.Request) {
-		withCors(w)
+		withCors(w, r)
 		if !withAuth(w, r) {
 			return
 		}
@@ -331,7 +336,7 @@ func main() {
 	})
 
 	http.HandleFunc("/user/addclass", func(w http.ResponseWriter, r *http.Request) {
-		withCors(w)
+		withCors(w, r)
 
 		if !withAuth(w, r) {
 			return
@@ -375,7 +380,7 @@ func main() {
 	})
 
 	http.HandleFunc("/user/removeclass", func(w http.ResponseWriter, r *http.Request) {
-		withCors(w)
+		withCors(w, r)
 
 		if !withAuth(w, r) {
 			return
@@ -420,7 +425,7 @@ func main() {
 
 	// Get all courses
 	http.HandleFunc("/course/all", func(w http.ResponseWriter, r *http.Request) {
-		withCors(w)
+		withCors(w, r)
 
 		// Require authentication due to expensive operation
 		if !withAuth(w, r) {
@@ -444,7 +449,7 @@ func main() {
 
 	// Get course
 	http.HandleFunc("/course/get", func(w http.ResponseWriter, r *http.Request) {
-		withCors(w)
+		withCors(w, r)
 		if r.Method != "POST" {
 			w.WriteHeader(http.StatusMethodNotAllowed)
 			return
@@ -482,7 +487,7 @@ func main() {
 
 	// Get courses by subject code
 	http.HandleFunc("/course/query/list", func(w http.ResponseWriter, r *http.Request) {
-		withCors(w)
+		withCors(w, r)
 
 		if jsonCourses, err := json.Marshal(database.QueryableKeys); err == nil {
 			w.Header().Set("Content-Type", "application/json")
@@ -493,7 +498,7 @@ func main() {
 	})
 
 	http.HandleFunc("/course/query", func(w http.ResponseWriter, r *http.Request) {
-		withCors(w)
+		withCors(w, r)
 		if r.Method != "POST" {
 			w.WriteHeader(http.StatusMethodNotAllowed)
 			return
