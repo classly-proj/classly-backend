@@ -37,17 +37,20 @@ const MEETINGS_STATEMENT = `CREATE TABLE IF NOT EXISTS meetings (
 
 const USERS_STATEMENT = `CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    username TEXT NOT NULL UNIQUE,
-    password TEXT NOT NULL,
-    classes TEXT NOT NULL
+    email TEXT NOT NULL UNIQUE,
+	first_name TEXT NOT NULL,
+	last_name TEXT NOT NULL,
+	password TEXT NOT NULL,
+	classes TEXT NOT NULL,
+	privilege INTEGER NOT NULL DEFAULT 0
 );`
 
-const INSERT_USER_STATEMENT = `INSERT INTO users (username, password, classes) VALUES (?, ?, ?);`
+const INSERT_USER_STATEMENT = `INSERT INTO users (email, first_name, last_name, password, classes) VALUES (?, ?, ?, ?, ?);`
 const INSERT_INSTUCTOR_STATEMENT = `INSERT INTO instructors (last_name, first_name, email, term_crn) VALUES (?, ?, ?, ?);`
 const INSERT_MEETING_STATEMENT = `INSERT INTO meetings (days, building, room, time, term_crn) VALUES (?, ?, ?, ?, ?);`
 const INSERT_COURSE_STATEMENT = `INSERT INTO courses (term_crn, title, subject_code, course_number, description) VALUES (?, ?, ?, ?, ?);`
 
-const SELECT_USER_STATEMENT = `SELECT id, username, password, classes FROM users WHERE username = ?;`
+const SELECT_USER_STATEMENT = `SELECT id, email, first_name, last_name, password, classes, privilege FROM users WHERE email = ?;`
 const SELECT_COUSE_STATEMENT = `SELECT term_crn, title, subject_code, course_number, description FROM courses WHERE term_crn = ?;`
 const SELECT_INSTRUCTORS_STATEMENT = `SELECT id, last_name, first_name, email FROM instructors WHERE term_crn = ?;`
 const SELECT_MEETINGS_STATEMENT = `SELECT id, days, building, room, time FROM meetings WHERE term_crn = ?;`

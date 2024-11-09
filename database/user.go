@@ -4,49 +4,43 @@ import (
 	"strings"
 )
 
-func CreateUser(username, password string) (*User, int) {
+func CreateUser(email, first, last, password string) (*User, int) {
 	// Check if user already exists
-	_, err := GetUser(username)
+	_, err := GetUser(email)
 
 	if err == nil {
 		return nil, CREATE_USER_ERROR_IMUsed
 	}
 
-	err = QueuedExec(INSERT_USER_STATEMENT, username, HashPassword(password), "")
+	err = QueuedExec(INSERT_USER_STATEMENT, email, first, last, HashPassword(password), "")
 	if err != nil {
 		return nil, CREATE_USER_ERROR_InternalServerError
 	}
 
-	if user, err := GetUser(username); err == nil {
+	if user, err := GetUser(email); err == nil {
 		return user, 0
 	} else {
 		return nil, CREATE_USER_ERROR_InternalServerError
 	}
 }
 
-func GetUser(username string) (*User, error) {
-	row := QueuedQueryRow(SELECT_USER_STATEMENT, username)
+func GetUser(email string) (*User, error) {
+	row := QueuedQueryRow(SELECT_USER_STATEMENT, email)
 
-	var id int
-	var name, password, classes string
-	err := row.Scan(&id, &name, &password, &classes)
+	var user User
+	var courses string
+	err := row.Scan(&user.Email, &user.FirstName, &user.LastName, &user.PasswordHash, &courses, &user.Privilege)
 	if err != nil {
 		return nil, err
 	}
 
-	var classesArr []string
-
-	for _, class := range strings.Split(classes, ",") {
+	for _, class := range strings.Split(courses, ",") {
 		if class != "" {
-			classesArr = append(classesArr, class)
+			user.Courses = append(user.Courses, class)
 		}
 	}
 
-	return &User{
-		Username:     name,
-		PasswordHash: password,
-		Classes:      classesArr,
-	}, nil
+	return &user, nil
 }
 
 func DeleteUser(username string) error {
@@ -54,7 +48,7 @@ func DeleteUser(username string) error {
 }
 
 func AllUsers() ([]User, error) {
-	rows, err := QueuedQuery("SELECT id, username, password, classes FROM users;")
+	rows, err := QueuedQuery("SELECT id, email, first_name, last_name, password, classes, privilege FROM users;")
 	if err != nil {
 		return nil, err
 	}
@@ -62,26 +56,20 @@ func AllUsers() ([]User, error) {
 	users := make([]User, 0)
 
 	for rows.Next() {
-		var id int
-		var name, password, classes string
-		err = rows.Scan(&id, &name, &password, &classes)
+		var user User
+		var courses string
+		err := rows.Scan(&user.Email, &user.FirstName, &user.LastName, &user.PasswordHash, &courses, &user.Privilege)
 		if err != nil {
 			return nil, err
 		}
 
-		var classesArr []string
-
-		for _, class := range strings.Split(classes, ",") {
+		for _, class := range strings.Split(courses, ",") {
 			if class != "" {
-				classesArr = append(classesArr, class)
+				user.Courses = append(user.Courses, class)
 			}
 		}
 
-		users = append(users, User{
-			Username:     name,
-			PasswordHash: password,
-			Classes:      classesArr,
-		})
+		users = append(users, user)
 	}
 
 	return users, nil

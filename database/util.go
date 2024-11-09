@@ -16,8 +16,9 @@ func HashPassword(password string) string {
 }
 
 type User struct {
-	Username, PasswordHash string
-	Classes                []string
+	Email, FirstName, LastName, PasswordHash string
+	Courses                                  []string
+	Privilege                                int
 }
 
 func (u *User) AddClass(crn string) {
@@ -25,32 +26,35 @@ func (u *User) AddClass(crn string) {
 		return
 	}
 
-	for _, class := range u.Classes {
+	for _, class := range u.Courses {
 		if class == crn {
 			return
 		}
 	}
 
-	u.Classes = append(u.Classes, crn)
+	u.Courses = append(u.Courses, crn)
 
-	QueuedExec("UPDATE users SET classes = ? WHERE username = ?;", strings.Join(u.Classes, ","), u.Username)
+	QueuedExec("UPDATE users SET classes = ? WHERE email = ?;", strings.Join(u.Courses, ","), u.Email)
 }
 
 func (u *User) RemoveClass(crn string) {
-	for i, class := range u.Classes {
+	for i, class := range u.Courses {
 		if class == crn {
-			u.Classes = append(u.Classes[:i], u.Classes[i+1:]...)
+			u.Courses = append(u.Courses[:i], u.Courses[i+1:]...)
 			break
 		}
 	}
 
-	QueuedExec("UPDATE users SET classes = ? WHERE username = ?;", strings.Join(u.Classes, ","), u.Username)
+	QueuedExec("UPDATE users SET classes = ? WHERE email = ?;", strings.Join(u.Courses, ","), u.Email)
 }
 
 func (u *User) JSON() []byte {
 	bytes, _ := json.Marshal(map[string]interface{}{
-		"username": u.Username,
-		"classes":  u.Classes,
+		"email":   u.Email,
+		"first":   u.FirstName,
+		"last":    u.LastName,
+		"courses": u.Courses,
+		"priv":    u.Privilege,
 	})
 
 	return bytes

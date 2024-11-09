@@ -33,24 +33,24 @@ func RandomString(length int) string {
 	return fmt.Sprintf("%x", bytes)
 }
 
-func TokenFor(username string) string {
-	if token, ok := tokens[username]; ok {
+func TokenFor(email string) string {
+	if token, ok := tokens[email]; ok {
 		if token.Expires.After(time.Now()) {
 			return token.Token
 		}
 	}
 
-	tokens[username] = &Token{
-		Username: username,
+	tokens[email] = &Token{
+		Username: email,
 		Token:    RandomString(32),
 		Expires:  time.Now().Add(time.Minute * 10),
 	}
 
-	return tokens[username].Token
+	return tokens[email].Token
 }
 
 func withAuth(w http.ResponseWriter, r *http.Request) bool {
-	username, err := r.Cookie("username")
+	email, err := r.Cookie("email")
 
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
@@ -59,7 +59,7 @@ func withAuth(w http.ResponseWriter, r *http.Request) bool {
 
 	token, err := r.Cookie("token")
 
-	if err != nil || token.Value != TokenFor(username.Value) {
+	if err != nil || token.Value != TokenFor(email.Value) {
 		w.WriteHeader(http.StatusUnauthorized)
 		return false
 	}
@@ -129,7 +129,7 @@ func main() {
 		r.Body.Read(body)
 
 		obj := struct {
-			Username string `json:"username"`
+			Email string `json:"email"`
 		}{}
 
 		err := json.Unmarshal(body, &obj)
@@ -139,7 +139,7 @@ func main() {
 			return
 		}
 
-		user, err := database.GetUser(obj.Username)
+		user, err := database.GetUser(obj.Email)
 
 		if err != nil {
 			w.WriteHeader(http.StatusNotFound)
@@ -168,7 +168,9 @@ func main() {
 		r.Body.Read(body)
 
 		obj := struct {
-			Username string `json:"username"`
+			Email    string `json:"email"`
+			First    string `json:"firstName"`
+			Last     string `json:"lastName"`
 			Password string `json:"password"`
 		}{}
 
@@ -179,7 +181,7 @@ func main() {
 			return
 		}
 
-		user, statusCode := database.CreateUser(obj.Username, obj.Password)
+		user, statusCode := database.CreateUser(obj.Email, obj.First, obj.Last, obj.Password)
 
 		if statusCode != database.CREATE_USER_SUCCESS {
 			switch statusCode {
@@ -195,8 +197,8 @@ func main() {
 		}
 
 		http.SetCookie(w, &http.Cookie{
-			Name:     "username",
-			Value:    obj.Username,
+			Name:     "email",
+			Value:    obj.Email,
 			Path:     "/",
 			SameSite: http.SameSiteNoneMode,
 			Secure:   true,
@@ -204,7 +206,7 @@ func main() {
 
 		http.SetCookie(w, &http.Cookie{
 			Name:     "token",
-			Value:    TokenFor(obj.Username),
+			Value:    TokenFor(obj.Email),
 			Path:     "/",
 			SameSite: http.SameSiteNoneMode,
 			Secure:   true,
@@ -213,7 +215,7 @@ func main() {
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(user.JSON())
 
-		util.Log.AddUser(fmt.Sprintf("User %s created", obj.Username))
+		util.Log.AddUser(fmt.Sprintf("User %s created", obj.Email))
 	})
 
 	// Login
@@ -233,7 +235,7 @@ func main() {
 		r.Body.Read(body)
 
 		obj := struct {
-			Username string `json:"username"`
+			Email    string `json:"email"`
 			Password string `json:"password"`
 		}{}
 
@@ -244,7 +246,7 @@ func main() {
 			return
 		}
 
-		user, err := database.GetUser(obj.Username)
+		user, err := database.GetUser(obj.Email)
 
 		if err != nil {
 			w.WriteHeader(http.StatusUnauthorized)
@@ -257,8 +259,8 @@ func main() {
 		}
 
 		http.SetCookie(w, &http.Cookie{
-			Name:     "username",
-			Value:    obj.Username,
+			Name:     "email",
+			Value:    obj.Email,
 			Path:     "/",
 			SameSite: http.SameSiteNoneMode,
 			Secure:   true,
@@ -266,7 +268,7 @@ func main() {
 
 		http.SetCookie(w, &http.Cookie{
 			Name:     "token",
-			Value:    TokenFor(obj.Username),
+			Value:    TokenFor(obj.Email),
 			Path:     "/",
 			SameSite: http.SameSiteNoneMode,
 			Secure:   true,
@@ -282,8 +284,8 @@ func main() {
 			return
 		}
 
-		username, _ := r.Cookie("username")
-		user, err := database.GetUser(username.Value)
+		email, _ := r.Cookie("email")
+		user, err := database.GetUser(email.Value)
 
 		if err != nil {
 			w.WriteHeader(http.StatusNotFound)
@@ -298,7 +300,7 @@ func main() {
 	http.HandleFunc("/user/logout", func(w http.ResponseWriter, r *http.Request) {
 		withCors(w, r)
 		http.SetCookie(w, &http.Cookie{
-			Name:     "username",
+			Name:     "email",
 			Value:    "",
 			Path:     "/",
 			HttpOnly: true,
@@ -326,8 +328,8 @@ func main() {
 			return
 		}
 
-		username, _ := r.Cookie("username")
-		err := database.DeleteUser(username.Value)
+		email, _ := r.Cookie("email")
+		err := database.DeleteUser(email.Value)
 
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -335,7 +337,7 @@ func main() {
 		}
 
 		http.SetCookie(w, &http.Cookie{
-			Name:     "username",
+			Name:     "email",
 			Value:    "",
 			Path:     "/",
 			HttpOnly: true,
@@ -350,7 +352,7 @@ func main() {
 
 		w.WriteHeader(http.StatusOK)
 
-		util.Log.RemoveUser(fmt.Sprintf("User %s deleted", username.Value))
+		util.Log.RemoveUser(fmt.Sprintf("User %s deleted", email.Value))
 	})
 
 	http.HandleFunc("/user/addclass", func(w http.ResponseWriter, r *http.Request) {
@@ -382,8 +384,8 @@ func main() {
 			return
 		}
 
-		username, _ := r.Cookie("username")
-		user, err := database.GetUser(username.Value)
+		email, _ := r.Cookie("email")
+		user, err := database.GetUser(email.Value)
 
 		if err != nil {
 			w.WriteHeader(http.StatusNotFound)
@@ -426,8 +428,8 @@ func main() {
 			return
 		}
 
-		username, _ := r.Cookie("username")
-		user, err := database.GetUser(username.Value)
+		email, _ := r.Cookie("email")
+		user, err := database.GetUser(email.Value)
 
 		if err != nil {
 			w.WriteHeader(http.StatusNotFound)
@@ -565,8 +567,6 @@ func main() {
 
 	// Mapbox
 	http.HandleFunc("/mapbox/directions", func(w http.ResponseWriter, r *http.Request) {
-		// `https://api.mapbox.com/directions/v5/mapbox/driving/${start[0]}%2C${start[1]}%3B${end[0]}%2C${end[1]}?alternatives=true&geometries=geojson&language=en&overview=full&steps=true&access_token=pk.eyJ1IjoiZHNjYXJiMjEiLCJhIjoiY2x0cnR1Y254MGkxdzJqbnZ2bHowcHN1MiJ9.TSvhTRQ2X-G0M-mzagneOw`;
-
 		withCors(w, r)
 
 		if !withAuth(w, r) {
