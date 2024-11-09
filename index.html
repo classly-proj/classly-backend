@@ -243,25 +243,6 @@ Test
 
         let lastChange = null;
 
-        
-                // fetch("/course/query", {
-                //     method: "POST",
-                //     headers: {
-                //         "Content-Type": "text/plain"
-                //     },
-                //     body: JSON.stringify({ key: "title", value: lastChange })
-                // }).then(async res => {
-                //     if (res.status !== 200) {
-                //         return {
-                //             ok: false,
-                //             status: res.status
-                //         };
-                //     }
-
-                //     const courses = await res.json();
-                //     console.log(courses);
-                // });
-
         async function searchTick() {
             if (input.value === lastChange || input.value.length < 3) {
                 setTimeout(searchTick, 100);
@@ -295,4 +276,10 @@ Test
 
         document.body.appendChild(box);
     }
+
+    const API_HOST = {
+        "127.0.0.1": "http://127.0.0.1:8000",
+        "localhost": "http://localhost:8000",
+        "hacknhbackend": "https://hacknhbackend.herokuapp.com"
+    }[window.location.hostname] || "http://localhost:8000";
 </script>
