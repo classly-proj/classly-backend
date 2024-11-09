@@ -13,7 +13,7 @@ Test
         const res = await fetch("/user/create", {
             method: "POST",
             headers: {
-                "Content-Type": "application/json",
+                "Content-Type": "text/plain"
             },
             body: JSON.stringify(creds())
         });
@@ -35,7 +35,7 @@ Test
         const res = await fetch("/user/login", {
             method: "POST",
             headers: {
-                "Content-Type": "application/json",
+                "Content-Type": "text/plain"
             },
             body: JSON.stringify(creds())
         });
@@ -56,7 +56,7 @@ Test
         const res = await fetch("/user/all", {
             method: "GET",
             headers: {
-                "Content-Type": "application/json",
+                "Content-Type": "text/plain"
             }
         });
 
@@ -75,10 +75,7 @@ Test
 
     async function deleteUser() {
         const res = await fetch("/user/delete", {
-            method: "DELETE",
-            headers: {
-                "Content-Type": "application/json",
-            }
+            method: "DELETE"
         });
 
         if (res.status !== 200) {
@@ -97,7 +94,7 @@ Test
         const res = await fetch("/user/get", {
             method: "POST",
             headers: {
-                "Content-Type": "application/json",
+                "Content-Type": "text/plain"
             },
             body: JSON.stringify({
                 username: prompt("Enter username")

@@ -94,7 +94,7 @@ func main() {
 			return
 		}
 
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Type", "text/plain")
 		var strs []string = make([]string, len(users))
 
 		for i, user := range users {
@@ -112,7 +112,7 @@ func main() {
 			return
 		}
 
-		if r.Header.Get("Content-Type") != "application/json" {
+		if r.Header.Get("Content-Type") != "text/plain" {
 			w.WriteHeader(http.StatusUnsupportedMediaType)
 			return
 		}
@@ -151,7 +151,7 @@ func main() {
 			return
 		}
 
-		if r.Header.Get("Content-Type") != "application/json" {
+		if r.Header.Get("Content-Type") != "text/plain" {
 			w.WriteHeader(http.StatusUnsupportedMediaType)
 			return
 		}
@@ -190,7 +190,7 @@ func main() {
 			return
 		}
 
-		if r.Header.Get("Content-Type") != "application/json" {
+		if r.Header.Get("Content-Type") != "text/plain" {
 			w.WriteHeader(http.StatusUnsupportedMediaType)
 			return
 		}
