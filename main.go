@@ -568,5 +568,5 @@ func main() {
 	})
 
 	util.Log.Status(fmt.Sprintf("Server started on port %d", util.Config.Server.Port))
-	http.ListenAndServe(fmt.Sprintf("127.0.0.1:%d", util.Config.Server.Port), nil)
+	http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", util.Config.Server.Port), nil)
 }
