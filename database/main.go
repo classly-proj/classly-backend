@@ -284,14 +284,15 @@ func GetCourseCRNs() ([]string, error) {
 	return courses, nil
 }
 
-var QueryableKeys = map[string]bool{
-	"term_crn":      true,
-	"title":         true,
-	"subject_code":  true,
-	"course_number": true,
+var QueryableKeys = map[string]string{
+	"term_crn":       "CRN",
+	"title":          "Title",
+	"subject_code":   "Subject",
+	"course_number":  "Number",
+	"subject-number": "Subject & Number",
 }
 
-func QueryCourse(key, value string) ([]courseload.Course, error) {
+func QueryCourse(key string, values ...string) ([]courseload.Course, error) {
 	if _, ok := QueryableKeys[key]; !ok {
 		return nil, fmt.Errorf("key %s is not queryable", key)
 	}
@@ -299,10 +300,13 @@ func QueryCourse(key, value string) ([]courseload.Course, error) {
 	var rows *sql.Rows
 	var err error
 
-	if key == "title" {
-		rows, err = db.Query(fmt.Sprintf("SELECT term_crn FROM courses WHERE %s LIKE ?", key), "%"+value+"%")
-	} else {
-		rows, err = db.Query(fmt.Sprintf("SELECT term_crn FROM courses WHERE %s = ?", key), value)
+	switch key {
+	case "title":
+		rows, err = db.Query("SELECT term_crn FROM courses WHERE title LIKE ?", "%"+values[0]+"%")
+	case "subject-number":
+		rows, err = db.Query("SELECT term_crn FROM courses WHERE subject_code = ? AND course_number LIKE ?", values[0], "%"+values[1]+"%")
+	default:
+		rows, err = db.Query("SELECT term_crn FROM courses WHERE "+key+" = ?", values[0])
 	}
 
 	if err != nil {

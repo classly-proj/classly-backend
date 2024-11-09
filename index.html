@@ -180,7 +180,7 @@ Test
         };
     }
 
-    async function queriableCourses() {
+    async function search() {
         const res = await fetch("/course/query/list");
 
         if (res.status !== 200) {
@@ -190,47 +190,30 @@ Test
             };
         }
 
-        const queriableKeys = Object.keys(await res.json());
-        console.log(queriableKeys);
+        // Internal Key -> Display Name
+        const queriableTypes = await res.json();
 
-        while (true) {
-            const key = prompt("Enter key to query\n\n" + queriableKeys.join("\n") + "\n\nType 'exit' to exit");
-            if (key === "exit") {
-                break;
-            }
-
-            if (!queriableKeys.includes(key)) {
-                alert("Invalid key");
-                continue;
-            }
-
-            const value = prompt("Enter value to query");
-            const res = await fetch("/course/query", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "text/plain"
-                },
-                body: JSON.stringify({ key, value })
-            });
-
-            if (res.status !== 200) {
-                return {
-                    ok: false,
-                    status: res.status
-                };
-            }
-
-            console.log(await res.json());
-        }
-    }
-
-    async function search() {
         const box = document.createElement("div");
         box.style.position = "absolute";
         box.style.top = "50%";
         box.style.left = "50%";
         box.style.transform = "translate(-50%, -50%)";
         box.style.backgroundColor = "grey";
+
+        const select = document.createElement("select");
+        select.style.width = "200px";
+        select.style.height = "30px";
+        select.style.fontSize = "20px";
+
+        for (const [key, value] of Object.entries(queriableTypes)) {
+            const option = document.createElement("option");
+            option.value = key;
+            option.innerText = value;
+
+            select.appendChild(option);
+        }
+
+        box.appendChild(select);
 
         const input = document.createElement("input");
         input.type = "text";
@@ -243,20 +226,39 @@ Test
 
         let lastChange = null;
 
+        let searchKey = null;
+
         async function searchTick() {
             if (input.value === lastChange || input.value.length < 3) {
                 setTimeout(searchTick, 100);
                 return;
             }
 
+            searchKey = select.value;
+
             lastChange = input.value;
+
+            let searchValue = lastChange;
+
+            if (searchKey === "subject-number") {
+                // Grep a string any number of whitespace, and a number
+                const match = lastChange.match(/([a-zA-Z]+)\s*(\d+)/);
+
+                if (match) {
+                    searchValue = `${match[1].toUpperCase()}-${match[2]}`;
+                } else {
+                    setTimeout(searchTick, 100);
+                    return;
+                }
+            }
+
 
             const response = await fetch("/course/query", {
                 method: "POST",
                 headers: {
                     "Content-Type": "text/plain"
                 },
-                body: JSON.stringify({ key: "title", value: lastChange })
+                body: JSON.stringify({ key: searchKey, value: searchValue })
             });
 
             if (response.status !== 200) {

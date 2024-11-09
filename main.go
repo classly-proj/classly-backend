@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"hacknhbackend.eparker.dev/courseload"
 	"hacknhbackend.eparker.dev/database"
 	"hacknhbackend.eparker.dev/util"
 )
@@ -403,7 +404,13 @@ func main() {
 			return
 		}
 
-		courses, err := database.QueryCourse(obj.QueryKey, obj.QueryValue)
+		var courses []courseload.Course
+
+		if obj.QueryKey == "subject-number" {
+			courses, err = database.QueryCourse(obj.QueryKey, strings.Split(obj.QueryValue, "-")...)
+		} else {
+			courses, err = database.QueryCourse(obj.QueryKey, obj.QueryValue)
+		}
 
 		if err != nil {
 			w.WriteHeader(http.StatusNotFound)
