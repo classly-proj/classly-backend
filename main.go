@@ -66,31 +66,17 @@ func withAuth(w http.ResponseWriter, r *http.Request) bool {
 
 func withCors(w http.ResponseWriter) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, DELETE")
-	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	w.Header().Set("Access-Control-Allow-Methods", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
+	w.Header().Set("Access-Control-Allow-Credentials", "true")
+	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+	w.Header().Set("Pragma", "no-cache")
 }
 
 func main() {
 	database.Init()
 
-	// start := time.Now()
-	// courses := courseload.LoadCourses()
-	// fmt.Printf("Loaded %d courses in %v\n", len(courses), time.Since(start))
-
-	// for _, course := range courses {
-	// 	database.InsertCourse(course)
-	// }
-
-	// fmt.Printf("Inserted %d courses\n", len(courses))
-
-	// for _, course := range courses {
-	// 	_, err := database.GetCourse(course.TERM_CRN)
-
-	// 	if err != nil {
-	// 		fmt.Printf("Failed to get course: %v\n", err)
-	// 		continue
-	// 	}
-	// }
+	go database.CourseUpdates()
 
 	// Basic http server
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -159,6 +145,7 @@ func main() {
 	// Create user
 	http.HandleFunc("/user/create", func(w http.ResponseWriter, r *http.Request) {
 		withCors(w)
+
 		if r.Method != "POST" {
 			w.WriteHeader(http.StatusMethodNotAllowed)
 			return

@@ -67,8 +67,6 @@ func LoadCourses() []Course {
 	var buckets [][]int = loadTotalCountAndBuckets(64)
 	var waitgroup sync.WaitGroup
 
-	fmt.Printf("Total buckets: %d\n", len(buckets))
-
 	for _, bucket := range buckets {
 		waitgroup.Add(1)
 		go func(offset, size int) {

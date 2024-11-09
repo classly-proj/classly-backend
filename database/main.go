@@ -244,6 +244,27 @@ func GetCourse(term_crn string) (*courseload.Course, error) {
 	}, nil
 }
 
+func GetCourseCRNs() ([]string, error) {
+	rows, err := db.Query("SELECT term_crn FROM courses;")
+	if err != nil {
+		return nil, err
+	}
+
+	courses := make([]string, 0)
+
+	for rows.Next() {
+		var term_crn string
+		err = rows.Scan(&term_crn)
+		if err != nil {
+			return nil, err
+		}
+
+		courses = append(courses, term_crn)
+	}
+
+	return courses, nil
+}
+
 func Init() {
 	db, err := OpenDatabase()
 	if err != nil {
