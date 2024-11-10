@@ -50,9 +50,17 @@ func TokenFor(email string) string {
 }
 
 func withAuth(w http.ResponseWriter, r *http.Request) bool {
+	cookies := r.Cookies()
+
+	// list them all
+	for _, cookie := range cookies {
+		fmt.Println(cookie.Name, cookie.Value)
+	}
+
 	email, err := r.Cookie("email")
 
 	if err != nil {
+		util.Log.Error("No email cookie")
 		w.WriteHeader(http.StatusUnauthorized)
 		return false
 	}
@@ -60,6 +68,11 @@ func withAuth(w http.ResponseWriter, r *http.Request) bool {
 	token, err := r.Cookie("token")
 
 	if err != nil || token.Value != TokenFor(email.Value) {
+		if err != nil {
+			util.Log.Error("No token cookie")
+		} else {
+			util.Log.Error("Token mismatch")
+		}
 		w.WriteHeader(http.StatusUnauthorized)
 		return false
 	}
@@ -249,11 +262,13 @@ func main() {
 		user, err := database.GetUser(obj.Email)
 
 		if err != nil {
+			fmt.Println(err)
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
 
 		if user.PasswordHash != database.HashPassword(obj.Password) {
+			fmt.Println("Password mismatch")
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
@@ -275,12 +290,15 @@ func main() {
 		})
 
 		w.WriteHeader(http.StatusOK)
+
+		util.Log.AddUser(fmt.Sprintf("User %s logged in", obj.Email))
 	})
 
 	// Me
 	http.HandleFunc("/user/me", func(w http.ResponseWriter, r *http.Request) {
 		withCors(w, r)
 		if !withAuth(w, r) {
+			util.Log.Error("Unauthorized")
 			return
 		}
 
@@ -288,6 +306,7 @@ func main() {
 		user, err := database.GetUser(email.Value)
 
 		if err != nil {
+			util.Log.Error("User not found")
 			w.WriteHeader(http.StatusNotFound)
 			return
 		}
@@ -651,7 +670,7 @@ func main() {
 			return
 		}
 
-		res, err := http.Get(fmt.Sprintf("https://api.mapbox.com/directions/v5/mapbox/driving/%f,%f;%f,%f?alternatives=true&geometries=geojson&language=en&overview=full&steps=true&access_token=%s", obj.StartX, obj.StartY, obj.EndX, obj.EndY, util.Config.Mapbox.AccessToken))
+		res, err := http.Get(fmt.Sprintf("https://api.mapbox.com/directions/v5/mapbox/walking/%f,%f;%f,%f?alternatives=true&geometries=geojson&language=en&overview=full&steps=true&access_token=%s", obj.StartX, obj.StartY, obj.EndX, obj.EndY, util.Config.Mapbox.AccessToken))
 
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
