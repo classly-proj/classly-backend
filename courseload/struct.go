@@ -22,6 +22,7 @@ type CourseData struct {
 	Description string       `json:"SYVSCHD_CRSE_DESC"`
 	Instructors []Instructor `json:"INSTRUCTORS"`
 	Meetings    []Meeting    `json:"MEETINGS"`
+	SectionNum  string       `json:"SYVSCHD_SEQ_NUMB"`
 }
 
 type Course struct {

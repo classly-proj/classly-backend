@@ -55,7 +55,7 @@ func CourseUpdates() {
 }
 
 func InsertCourse(course courseload.Course) error {
-	err := QueuedExec(INSERT_COURSE_STATEMENT, course.CRN, course.Data.Title, course.Data.Subject, course.Data.Number, course.Data.Description)
+	err := QueuedExec(INSERT_COURSE_STATEMENT, course.CRN, course.Data.Title, course.Data.Subject, course.Data.Number, course.Data.SectionNum, course.Data.Description)
 	if err != nil {
 		return err
 	}
@@ -99,8 +99,8 @@ func DeleteCourse(term_crn string) error {
 func GetCourse(term_crn string) (*courseload.Course, error) {
 	row := QueuedQueryRow(SELECT_COUSE_STATEMENT, term_crn)
 
-	var title, subject_code, course_number, description string
-	err := row.Scan(&term_crn, &title, &subject_code, &course_number, &description)
+	var title, subject_code, course_number, section_number, description string
+	err := row.Scan(&term_crn, &title, &subject_code, &course_number, &section_number, &description)
 	if err != nil {
 		return nil, err
 	}
@@ -157,6 +157,7 @@ func GetCourse(term_crn string) (*courseload.Course, error) {
 			Description: description,
 			Instructors: instructors,
 			Meetings:    meetings,
+			SectionNum:  section_number,
 		},
 	}, nil
 }

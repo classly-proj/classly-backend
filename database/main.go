@@ -13,6 +13,7 @@ const COURSES_STATEMENT = `CREATE TABLE IF NOT EXISTS courses (
     title TEXT NOT NULL,
     subject_code TEXT NOT NULL,
     course_number TEXT NOT NULL,
+	section_number TEXT NOT NULL,
     description TEXT NOT NULL
 );`
 
@@ -48,10 +49,10 @@ const USERS_STATEMENT = `CREATE TABLE IF NOT EXISTS users (
 const INSERT_USER_STATEMENT = `INSERT INTO users (email, first_name, last_name, password, classes) VALUES (?, ?, ?, ?, ?);`
 const INSERT_INSTUCTOR_STATEMENT = `INSERT INTO instructors (last_name, first_name, email, term_crn) VALUES (?, ?, ?, ?);`
 const INSERT_MEETING_STATEMENT = `INSERT INTO meetings (days, building, room, time, term_crn) VALUES (?, ?, ?, ?, ?);`
-const INSERT_COURSE_STATEMENT = `INSERT INTO courses (term_crn, title, subject_code, course_number, description) VALUES (?, ?, ?, ?, ?);`
+const INSERT_COURSE_STATEMENT = `INSERT INTO courses (term_crn, title, subject_code, course_number, section_number, description) VALUES (?, ?, ?, ?, ?, ?);`
 
 const SELECT_USER_STATEMENT = `SELECT id, email, first_name, last_name, password, classes, privilege FROM users WHERE email = ?;`
-const SELECT_COUSE_STATEMENT = `SELECT term_crn, title, subject_code, course_number, description FROM courses WHERE term_crn = ?;`
+const SELECT_COUSE_STATEMENT = `SELECT term_crn, title, subject_code, course_number, section_number, description FROM courses WHERE term_crn = ?;`
 const SELECT_INSTRUCTORS_STATEMENT = `SELECT id, last_name, first_name, email FROM instructors WHERE term_crn = ?;`
 const SELECT_MEETINGS_STATEMENT = `SELECT id, days, building, room, time FROM meetings WHERE term_crn = ?;`
 
