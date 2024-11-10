@@ -67,6 +67,18 @@ func (u *User) JSON() []byte {
 	return bytes
 }
 
+type UserProfile struct {
+	Email, FirstName, LastName string
+}
+
+func (u *User) Profile() UserProfile {
+	return UserProfile{
+		Email:     u.Email,
+		FirstName: u.FirstName,
+		LastName:  u.LastName,
+	}
+}
+
 func (u *User) ProfileJSON() []byte {
 	bytes, _ := json.Marshal(map[string]interface{}{
 		"email": u.Email,

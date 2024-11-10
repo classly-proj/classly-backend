@@ -704,29 +704,55 @@ func main() {
 
 		w.Header().Set("Content-Type", "application/json")
 
-		var jsonUsers string = "["
+		// var jsonUsers string = "["
 
-		for i, list := range courses {
-			if i != 0 {
-				jsonUsers += ","
-			}
+		// for i, list := range courses {
+		// 	if i != 0 {
+		// 		jsonUsers += ","
+		// 	}
 
-			jsonUsers += "{\"crn\":\"" + user.Courses[i] + "\",\"users\":["
+		// 	jsonUsers += "{\"crn\":\"" + user.Courses[i] + "\",\"users\":["
 
-			for j, user := range list {
-				if j != 0 {
-					jsonUsers += ","
-				}
+		// 	for j, user := range list {
+		// 		if j != 0 {
+		// 			jsonUsers += ","
+		// 		}
 
-				jsonUsers += string(user.ProfileJSON())
-			}
+		// 		jsonUsers += string(user.ProfileJSON())
+		// 	}
 
-			jsonUsers += "]}"
+		// 	jsonUsers += "]}"
+		// }
+
+		// jsonUsers += "]"
+
+		// w.Write([]byte(jsonUsers))
+
+		type CourseUsers struct {
+			CRN   string                 `json:"crn"`
+			Users []database.UserProfile `json:"users"`
 		}
 
-		jsonUsers += "]"
+		var courseUsers []CourseUsers
 
-		w.Write([]byte(jsonUsers))
+		for i, list := range courses {
+			var users []database.UserProfile
+
+			for _, user := range list {
+				users = append(users, user.Profile())
+			}
+
+			courseUsers = append(courseUsers, CourseUsers{
+				CRN:   user.Courses[i],
+				Users: users,
+			})
+		}
+
+		if jsonUsers, err := json.Marshal(courseUsers); err == nil {
+			w.Write(jsonUsers)
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
 	})
 
 	util.Log.Status(fmt.Sprintf("Server started on port %d", util.Config.Server.Port))
