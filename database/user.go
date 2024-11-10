@@ -77,25 +77,8 @@ func AllUsers() ([]User, error) {
 	return users, nil
 }
 
-func intersect(a, b []string) []string {
-	m := make(map[string]bool)
-	ab := make([]string, 0)
-
-	for _, item := range a {
-		m[item] = true
-	}
-
-	for _, item := range b {
-		if _, ok := m[item]; ok {
-			ab = append(ab, item)
-		}
-	}
-
-	return ab
-}
-
 // Every user with 1+ courses in common with the given user
-func UsersWithSimilarCourses(user *User) ([]User, error) {
+func UsersInCourse(crn string) ([]User, error) {
 	rows, err := QueuedQuery("SELECT id, email, first_name, last_name, password, classes, privilege FROM users;")
 	if err != nil {
 		return nil, err
@@ -118,8 +101,11 @@ func UsersWithSimilarCourses(user *User) ([]User, error) {
 			}
 		}
 
-		if len(intersect(user.Courses, u.Courses)) > 0 {
-			users = append(users, u)
+		for _, class := range u.Courses {
+			if class == crn {
+				users = append(users, u)
+				break
+			}
 		}
 	}
 

@@ -694,20 +694,39 @@ func main() {
 			return
 		}
 
-		users, err := database.UsersWithSimilarCourses(user)
+		var courses [][]database.User
 
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
+		for _, crn := range user.Courses {
+			if users, err := database.UsersInCourse(crn); err == nil {
+				courses = append(courses, users)
+			}
 		}
 
 		w.Header().Set("Content-Type", "application/json")
 
-		if jsonUsers, err := json.Marshal(users); err == nil {
-			w.Write(jsonUsers)
-		} else {
-			w.WriteHeader(http.StatusInternalServerError)
+		var jsonUsers string = "["
+
+		for i, list := range courses {
+			if i != 0 {
+				jsonUsers += ","
+			}
+
+			jsonUsers += "{\"crn\":\"" + user.Courses[i] + "\",\"users\":["
+
+			for j, user := range list {
+				if j != 0 {
+					jsonUsers += ","
+				}
+
+				jsonUsers += string(user.ProfileJSON())
+			}
+
+			jsonUsers += "]}"
 		}
+
+		jsonUsers += "]"
+
+		w.Write([]byte(jsonUsers))
 	})
 
 	util.Log.Status(fmt.Sprintf("Server started on port %d", util.Config.Server.Port))

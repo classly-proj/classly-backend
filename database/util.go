@@ -67,6 +67,16 @@ func (u *User) JSON() []byte {
 	return bytes
 }
 
+func (u *User) ProfileJSON() []byte {
+	bytes, _ := json.Marshal(map[string]interface{}{
+		"email": u.Email,
+		"first": u.FirstName,
+		"last":  u.LastName,
+	})
+
+	return bytes
+}
+
 const (
 	CREATE_USER_SUCCESS = iota
 	CREATE_USER_ERROR_IMUsed
