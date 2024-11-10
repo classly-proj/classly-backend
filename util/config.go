@@ -16,8 +16,8 @@ var Config struct {
 	}
 
 	Server struct {
-		Host string
-		Port int
+		Host, TLS string
+		Port      int
 	}
 
 	General struct {
@@ -64,6 +64,7 @@ func LoadEnvFile() {
 				file.WriteString("SERVER_PORT=\n")
 				file.WriteString("GENERAL_UPDATE_COURSES=\n")
 				file.WriteString("MAPBOX_ACCESS_TOKEN=\n")
+				file.WriteString("TLS_DIRECTORY=\n")
 
 				file.Close()
 
@@ -153,6 +154,10 @@ func LoadEnvFile() {
 		os.Exit(1)
 	} else {
 		Config.Mapbox.AccessToken = tmp.(string)
+	}
+
+	if tmp = os.Getenv("TLS_DIRECTORY"); tmp != "" {
+		Config.Server.TLS = tmp.(string)
 	}
 
 	Log.Status("Loaded environment variables")

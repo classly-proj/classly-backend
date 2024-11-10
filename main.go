@@ -675,5 +675,11 @@ func main() {
 	})
 
 	util.Log.Status(fmt.Sprintf("Server started on port %d", util.Config.Server.Port))
-	http.ListenAndServe(fmt.Sprintf("%s:%d", util.Config.Server.Host, util.Config.Server.Port), nil)
+	var at string = fmt.Sprintf("%s:%d", util.Config.Server.Host, util.Config.Server.Port)
+
+	if util.Config.Server.TLS != "" {
+		http.ListenAndServeTLS(at, util.Config.Server.TLS+"/fullchain.pem", util.Config.Server.TLS+"/privkey.pem", nil)
+	} else {
+		http.ListenAndServe(at, nil)
+	}
 }
