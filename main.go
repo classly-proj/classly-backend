@@ -446,6 +446,54 @@ func main() {
 		w.WriteHeader(http.StatusOK)
 	})
 
+	http.HandleFunc("/user/changename", func(w http.ResponseWriter, r *http.Request) {
+		withCors(w, r)
+
+		if !withAuth(w, r) {
+			return
+		}
+
+		if r.Method != "POST" {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+
+		if r.Header.Get("Content-Type") != "text/plain" {
+			w.WriteHeader(http.StatusUnsupportedMediaType)
+			return
+		}
+
+		body := make([]byte, r.ContentLength)
+		r.Body.Read(body)
+
+		obj := struct {
+			First string `json:"firstName"`
+			Last  string `json:"lastName"`
+		}{}
+
+		err := json.Unmarshal(body, &obj)
+
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		email, _ := r.Cookie("email")
+		user, err := database.GetUser(email.Value)
+
+		if err != nil {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+
+		if err := user.ChangeName(obj.First, obj.Last); err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+	})
+
 	// Get all courses
 	http.HandleFunc("/course/all", func(w http.ResponseWriter, r *http.Request) {
 		withCors(w, r)

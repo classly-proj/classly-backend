@@ -50,6 +50,13 @@ func (u *User) RemoveClass(crn string) error {
 	return QueuedExec("UPDATE users SET classes = ? WHERE email = ?;", strings.Join(u.Courses, ","), u.Email)
 }
 
+func (u *User) ChangeName(first, last string) error {
+	u.FirstName = first
+	u.LastName = last
+
+	return QueuedExec("UPDATE users SET first_name = ?, last_name = ? WHERE email = ?;", first, last, u.Email)
+}
+
 func (u *User) JSON() []byte {
 	bytes, _ := json.Marshal(map[string]interface{}{
 		"email":   u.Email,
