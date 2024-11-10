@@ -98,3 +98,14 @@ func QueuedQueryRow(query string, args ...interface{}) *sql.Row {
 	})
 	return row
 }
+
+func QueuedBegin() (*sql.Tx, error) {
+	var tx *sql.Tx
+	err := GetQueue().EnqueueOperation(func() error {
+		var err error
+		tx, err = db.Begin()
+		return err
+	})
+
+	return tx, err
+}

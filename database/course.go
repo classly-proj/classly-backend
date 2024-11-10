@@ -44,11 +44,37 @@ func CourseUpdates() {
 		}
 	}
 
+	// Transaction
+	transaction, err := QueuedBegin()
+
+	if err != nil {
+		util.Log.Error(fmt.Sprintf("Error starting transaction: %v", err))
+		return
+	}
+
 	for _, course := range courses {
 		if crnsMap[course.CRN] == 1 {
-			InsertCourse(course)
+			// InsertCourse(course)
+
+			transaction.Exec(INSERT_COURSE_STATEMENT, course.CRN, course.Data.Title, course.Data.Subject, course.Data.Number, course.Data.SectionNum, course.Data.Description)
+
+			for _, instructor := range course.Data.Instructors {
+				transaction.Exec(INSERT_INSTUCTOR_STATEMENT, instructor.LastName, instructor.FirstName, instructor.Email, course.CRN)
+			}
+
+			for _, meeting := range course.Data.Meetings {
+				transaction.Exec(INSERT_MEETING_STATEMENT, meeting.Days, meeting.Building, meeting.Room, meeting.Time, course.CRN)
+			}
+
 			inserts++
 		}
+	}
+
+	err = transaction.Commit()
+
+	if err != nil {
+		util.Log.Error(fmt.Sprintf("Error committing transaction: %v", err))
+		return
 	}
 
 	util.Log.Status(fmt.Sprintf("Inserted %d courses, deleted %d courses", inserts, deletes))
