@@ -40,8 +40,6 @@ func TokenFor(email string) string {
 		}
 	}
 
-	fmt.Printf("New token for \"%s\"\n", email)
-
 	tokens[email] = &Token{
 		Username: email,
 		Token:    RandomString(32),
