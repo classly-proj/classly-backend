@@ -704,30 +704,6 @@ func main() {
 
 		w.Header().Set("Content-Type", "application/json")
 
-		// var jsonUsers string = "["
-
-		// for i, list := range courses {
-		// 	if i != 0 {
-		// 		jsonUsers += ","
-		// 	}
-
-		// 	jsonUsers += "{\"crn\":\"" + user.Courses[i] + "\",\"users\":["
-
-		// 	for j, user := range list {
-		// 		if j != 0 {
-		// 			jsonUsers += ","
-		// 		}
-
-		// 		jsonUsers += string(user.ProfileJSON())
-		// 	}
-
-		// 	jsonUsers += "]}"
-		// }
-
-		// jsonUsers += "]"
-
-		// w.Write([]byte(jsonUsers))
-
 		type CourseUsers struct {
 			CRN   string                 `json:"crn"`
 			Users []database.UserProfile `json:"users"`
