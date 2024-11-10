@@ -675,7 +675,39 @@ func main() {
 
 	// Community
 	http.HandleFunc("/community/takingmyclasses", func(w http.ResponseWriter, r *http.Request) {
+		withCors(w, r)
 
+		if !withAuth(w, r) {
+			return
+		}
+
+		if r.Method != "GET" {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+
+		email, _ := r.Cookie("email")
+		user, err := database.GetUser(email.Value)
+
+		if err != nil {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+
+		users, err := database.UsersWithSimilarCourses(user)
+
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+
+		if jsonUsers, err := json.Marshal(users); err == nil {
+			w.Write(jsonUsers)
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
 	})
 
 	util.Log.Status(fmt.Sprintf("Server started on port %d", util.Config.Server.Port))
