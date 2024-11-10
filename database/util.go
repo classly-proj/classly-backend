@@ -34,8 +34,6 @@ func (u *User) AddClass(crn string) error {
 
 	u.Courses = append(u.Courses, crn)
 
-	fmt.Println("Adding class:", strings.Join(u.Courses, ","))
-
 	return QueuedExec("UPDATE users SET classes = ? WHERE email = ?;", strings.Join(u.Courses, ","), u.Email)
 }
 
