@@ -140,7 +140,7 @@ func main() {
 			return
 		}
 
-		user, err := database.GetUser(obj.Email)
+		user, err := database.GetUser(strings.ToLower(obj.Email))
 
 		if err != nil {
 			w.WriteHeader(http.StatusNotFound)
