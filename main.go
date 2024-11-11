@@ -59,13 +59,14 @@ func withAuth(w http.ResponseWriter, r *http.Request) bool {
 
 	token, err := r.Cookie("token")
 
-	if err != nil || token.Value != TokenFor(email.Value) {
+	if err != nil || token.Value != TokenFor(strings.ToLower(email.Value)) {
 		w.WriteHeader(http.StatusUnauthorized)
 		return false
 	}
 
 	return true
 }
+
 func withCors(w http.ResponseWriter, r *http.Request) {
 	origin := r.Header.Get("Origin")
 	if origin != "" {
@@ -139,7 +140,7 @@ func main() {
 			return
 		}
 
-		user, err := database.GetUser(obj.Email)
+		user, err := database.GetUser(strings.ToLower(obj.Email))
 
 		if err != nil {
 			w.WriteHeader(http.StatusNotFound)
@@ -181,7 +182,7 @@ func main() {
 			return
 		}
 
-		user, statusCode := database.CreateUser(obj.Email, obj.First, obj.Last, obj.Password)
+		user, statusCode := database.CreateUser(strings.ToLower(obj.Email), obj.First, obj.Last, obj.Password)
 
 		if statusCode != database.CREATE_USER_SUCCESS {
 			switch statusCode {
@@ -198,7 +199,7 @@ func main() {
 
 		http.SetCookie(w, &http.Cookie{
 			Name:     "email",
-			Value:    obj.Email,
+			Value:    strings.ToLower(obj.Email),
 			Path:     "/",
 			SameSite: http.SameSiteNoneMode,
 			Secure:   true,
@@ -206,7 +207,7 @@ func main() {
 
 		http.SetCookie(w, &http.Cookie{
 			Name:     "token",
-			Value:    TokenFor(obj.Email),
+			Value:    TokenFor(strings.ToLower(obj.Email)),
 			Path:     "/",
 			SameSite: http.SameSiteNoneMode,
 			Secure:   true,
@@ -246,7 +247,7 @@ func main() {
 			return
 		}
 
-		user, err := database.GetUser(obj.Email)
+		user, err := database.GetUser(strings.ToLower(obj.Email))
 
 		if err != nil {
 			w.WriteHeader(http.StatusUnauthorized)
@@ -260,7 +261,7 @@ func main() {
 
 		http.SetCookie(w, &http.Cookie{
 			Name:     "email",
-			Value:    obj.Email,
+			Value:    strings.ToLower(obj.Email),
 			Path:     "/",
 			SameSite: http.SameSiteNoneMode,
 			Secure:   true,
@@ -268,7 +269,7 @@ func main() {
 
 		http.SetCookie(w, &http.Cookie{
 			Name:     "token",
-			Value:    TokenFor(obj.Email),
+			Value:    TokenFor(strings.ToLower(obj.Email)),
 			Path:     "/",
 			SameSite: http.SameSiteNoneMode,
 			Secure:   true,
