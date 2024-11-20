@@ -2,6 +2,7 @@ package util
 
 import (
 	"fmt"
+	"math"
 	"os"
 	"regexp"
 	"strconv"
@@ -100,7 +101,12 @@ func LoadEnvFile() {
 			Log.Error("DATABASE_QUEUE_SIZE not an integer")
 			os.Exit(1)
 		} else {
-			Config.Database.QueueSize = int(i)
+			if i > math.MinInt32 && i < math.MaxInt32 {
+				Config.Database.QueueSize = int(i)
+			} else {
+				Log.Error("DATABASE_QUEUE_SIZE not within int32 range")
+				os.Exit(1)
+			}
 		}
 	}
 
@@ -133,7 +139,12 @@ func LoadEnvFile() {
 			Log.Error("SERVER_PORT not an integer")
 			os.Exit(1)
 		} else {
-			Config.Server.Port = int(i)
+			if i < math.MaxUint16 {
+				Config.Server.Port = int(i)
+			} else {
+				Log.Error("SERVER_PORT not within int16 range")
+				os.Exit(1)
+			}
 		}
 	}
 

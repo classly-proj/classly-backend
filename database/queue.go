@@ -84,7 +84,12 @@ func QueuedQuery(query string, args ...interface{}) (*sql.Rows, error) {
 	var rows *sql.Rows
 	err := GetQueue().EnqueueOperation(func() error {
 		var err error
-		rows, err = db.Query(query, args...)
+		stmt, err := db.Prepare(query)
+		if err != nil {
+			return err
+		}
+
+		rows, err = stmt.Query(args...)
 		return err
 	})
 	return rows, err
