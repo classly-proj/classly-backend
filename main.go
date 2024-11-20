@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math"
 	"net/http"
 	"strings"
 	"time"
@@ -656,7 +657,13 @@ func main() {
 			return
 		}
 
-		res, err := http.Get(fmt.Sprintf("https://api.mapbox.com/directions/v5/mapbox/walking/%f,%f;%f,%f?alternatives=true&geometries=geojson&language=en&overview=full&steps=true&access_token=%s", obj.StartX, obj.StartY, obj.EndX, obj.EndY, util.Config.Mapbox.AccessToken))
+		var validateCoordinate func(float64) float64 = func(x float64) float64 {
+			return math.Max(-90, math.Min(90, x))
+		}
+
+		var sX, sY, eX, eY float64 = validateCoordinate(obj.StartX), validateCoordinate(obj.StartY), validateCoordinate(obj.EndX), validateCoordinate(obj.EndY)
+
+		res, err := http.Get(fmt.Sprintf("https://api.mapbox.com/directions/v5/mapbox/walking/%f,%f;%f,%f?alternatives=true&geometries=geojson&language=en&overview=full&steps=true&access_token=%s", sX, sY, eX, eY, util.Config.Mapbox.AccessToken))
 
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
